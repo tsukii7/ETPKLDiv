@@ -2,8 +2,8 @@
   <title>ETPKLDiv Test Project</title>
   <style>
     canvas{
-      width: 360px;
-      height: 360px;
+      width: 480px;
+      height: 480px;
       image-rendering: -moz-crisp-edges;
       image-rendering: -webkit-crisp-edges;
       image-rendering: pixelated;
@@ -53,10 +53,11 @@
       <div class="full-row">
         <span>Input: </span>
         <select id="input_data" onchange="loadDefaultSettings(); restartGeneration()">
+          <option selected="selected" value="baba">Baba Is You</option>
           <option value="redblack">Red & Black</option>
           <option value="whiteblack">White & Black</option>
           <option value="flower">Flowers</option>
-          <option selected="selected" value="loderunner">Lode Runner</option>
+          <option value="loderunner">Lode Runner</option>
           <option value="mario">Super Mario</option>
         </select>
       </div>
@@ -78,8 +79,8 @@
         <span>Fixed Borders: </span>
         <input type="checkbox" id="border_top" onchange="restartGeneration()" checked>Top</input>
         <input type="checkbox" id="border_bot" onchange="restartGeneration()" checked>Bottom</input>
-        <input type="checkbox" id="border_left" onchange="restartGeneration()">Left</input>
-        <input type="checkbox" id="border_right" onchange="restartGeneration()">Right</input>
+        <input type="checkbox" id="border_left" onchange="restartGeneration()" checked>Left</input>
+        <input type="checkbox" id="border_right" onchange="restartGeneration()" checked>Right</input>
       </div>
       <div class="full-row">
         <span>Population: </span>
@@ -125,8 +126,8 @@
   <script type="text/javascript" src="ETPKLDiv.js"></script>
   <script type="text/javascript">
     let outputCanvas = document.getElementById("output_render");
-    outputCanvas.width = 240;
-    outputCanvas.height = 240;
+    outputCanvas.width = 480;
+    outputCanvas.height = 480;
     let outputContext2D = outputCanvas.getContext("2d");
     outputContext2D.imageSmoothingEnabled = false;
     outputContext2D.fillStyle = "#000000";
@@ -152,8 +153,8 @@
       let scaleY = outputCanvas.height / rect.height;
       let mouseX = (evt.clientX - rect.left) * scaleX;
       let mouseY = (evt.clientY - rect.top) * scaleY;
-      tileX = Math.floor(mouseX/8);
-      tileY = Math.floor(mouseY/8);
+      tileX = Math.floor(mouseX/48);
+      tileY = Math.floor(mouseY/48);
 
       if(mouseDown){
         let selected = 0;
@@ -219,18 +220,24 @@
       rawFile.onreadystatechange = function (){
           if(rawFile.readyState === 4){
               if(rawFile.status === 200 || rawFile.status == 0){
-                let map = [];
-                let lines = rawFile.responseText.split("\n");
-                for(let l of lines){
-                  l = l.trim();
-                  if(l.length > 0){
-                    map.push([]);
-                    for(let c of l){
-                      map[map.length-1].push(c.charCodeAt(0) - 'a'.charCodeAt(0));
+                let maps = [];
+                let map = rawFile.responseText.split("\n\n\n")
+                for(let m of map){
+                  let lines = m.split("\n");
+                  if(lines.length > 0){
+                    maps.push([]);
+                    for(let l of lines){
+                      l = l.trim();
+                      if(l.length > 0){
+                        maps[maps.length-1].push([]);
+                        for(let c of l){
+                          maps[maps.length-1][(maps[maps.length-1]).length-1].push(c.charCodeAt(0) - 'A'.charCodeAt(0));
+                        }
+                      }
                     }
                   }
                 }
-                data[name]["map"] = map;
+                data[name]["map"] = maps;
               }
           }
       }
@@ -250,12 +257,12 @@
       context.fillRect(0,0,canvas.width,canvas.height);
       for(let y=0; y<map.length; y++){
         for(let x=0; x<map[y].length; x++){
-          context.drawImage(graphics,map[y][x]*8,0,8,8,x*8,y*8,8,8);
+          context.drawImage(graphics,map[y][x]*48,0,48,48,x*48,y*48,48,48);
         }
       }
-      context.drawImage(hover, tileX*8, tileY*8);
+      context.drawImage(hover, tileX*48, tileY*48, 48, 48);
       for(let n in lockedTiles){
-        context.drawImage(lockedImage, lockedTiles[n]["x"]*8, lockedTiles[n]["y"]*8);
+        context.drawImage(lockedImage, lockedTiles[n]["x"]*48, lockedTiles[n]["y"]*48, 48, 48);
       }
     }
 
@@ -384,20 +391,21 @@
       let clone = template.content.cloneNode(true);
       clone.children[0].checked=true;
       radioButtons.appendChild(clone);
-      for(let i=0; i<inputData.img.width/8; i++){
+      for(let i=0; i<inputData.img.width/48; i++){
         let tempCanvas = document.createElement("canvas");
-        tempCanvas.width = 8;
-        tempCanvas.height = 8;
-        tempCanvas.getContext("2d").drawImage(inputData.img,i*8,0,8,8,0,0,8,8);
+        tempCanvas.width = 48;
+        tempCanvas.height = 48;
+        tempCanvas.getContext("2d").drawImage(inputData.img,i*48,0,48,48,0,0,48,48);
         clone = template.content.cloneNode(true);
         clone.children[1].src=tempCanvas.toDataURL();
         radioButtons.appendChild(clone);
       }
+      debugger
 
-      etpkldiv.initializePatternDictionary([inputData.map], tp_size,
+      etpkldiv.initializePatternDictionary(inputData.map, tp_size,
         {"x": warp_x, "y": warp_y},
         {"left": border_left, "right": border_right, "top": border_top, "bot": border_bot});
-      etpkldiv.initializeGeneration(30, 30, pop_size);
+      etpkldiv.initializeGeneration(10, 10, pop_size);
       renderMap(outputCanvas, outputContext2D, inputData.img, etpkldiv.getMap());
 
       document.getElementById("iter-number").innerText = etpkldiv.getIteration();
