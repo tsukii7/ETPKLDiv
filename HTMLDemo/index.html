@@ -77,10 +77,10 @@
       </div>
       <div class="full-row">
         <span>Fixed Borders: </span>
-        <input type="checkbox" id="border_top" onchange="restartGeneration()" checked>Top</input>
-        <input type="checkbox" id="border_bot" onchange="restartGeneration()" checked>Bottom</input>
-        <input type="checkbox" id="border_left" onchange="restartGeneration()" checked>Left</input>
-        <input type="checkbox" id="border_right" onchange="restartGeneration()" checked>Right</input>
+        <input type="checkbox" id="border_top" onchange="restartGeneration()" >Top</input>
+        <input type="checkbox" id="border_bot" onchange="restartGeneration()" >Bottom</input>
+        <input type="checkbox" id="border_left" onchange="restartGeneration()" >Left</input>
+        <input type="checkbox" id="border_right" onchange="restartGeneration()" >Right</input>
       </div>
       <div class="full-row">
         <span>Population: </span>
@@ -123,6 +123,8 @@
       Check the full source code on  <a href="https://github.com/amidos2006/ETPKLDiv">Github</a>.
     </div>
   </body>
+  <script type="text/javascript" src="simulation.js"></script>
+  <script type="text/javascript" src="evaluation.js"></script>
   <script type="text/javascript" src="ETPKLDiv.js"></script>
   <script type="text/javascript">
     let outputCanvas = document.getElementById("output_render");
@@ -221,9 +223,9 @@
           if(rawFile.readyState === 4){
               if(rawFile.status === 200 || rawFile.status == 0){
                 let maps = [];
-                let map = rawFile.responseText.split("\n\n\n")
+                let map = rawFile.responseText.split("\r\n\r\n\r\n");
                 for(let m of map){
-                  let lines = m.split("\n");
+                  let lines = m.split("\r\n");
                   if(lines.length > 0){
                     maps.push([]);
                     for(let l of lines){
@@ -400,7 +402,6 @@
         clone.children[1].src=tempCanvas.toDataURL();
         radioButtons.appendChild(clone);
       }
-      debugger
 
       etpkldiv.initializePatternDictionary(inputData.map, tp_size,
         {"x": warp_x, "y": warp_y},

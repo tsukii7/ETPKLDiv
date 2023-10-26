@@ -1,3 +1,7 @@
+// var eval = require('evaluation')
+
+// import {getNewFitness} from "./evaluation";
+
 var ETPKLDiv = (function () {
   'use strict';
 
@@ -243,6 +247,8 @@ var ETPKLDiv = (function () {
     }
 
     getFitness(){
+      // debugger
+      // getNewFitness(this._map);
       return this._fitness;
     }
 
