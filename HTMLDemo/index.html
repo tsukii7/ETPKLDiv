@@ -72,7 +72,7 @@
       </div>
       <div class="full-row">
         <span>Tile Pattern Warp: </span>
-        <input type="checkbox" id="warp_x" onchange="restartGeneration()" checked>X</input>
+        <input type="checkbox" id="warp_x" onchange="restartGeneration()">X</input>
         <input type="checkbox" id="warp_y" onchange="restartGeneration()">Y</input>
       </div>
       <div class="full-row">
@@ -86,8 +86,8 @@
         <span>Population: </span>
         <select id="pop_size" onchange="restartGeneration()">
           <option value="1">1</option>
-          <option selected="selected" value="2">2</option>
-          <option value="4">4</option>
+          <option value="2">2</option>
+          <option selected="selected" value="4">4</option>
           <option value="8">8</option>
         </select>
       </div>
@@ -103,10 +103,10 @@
         <span>Asymmetric Weight: </span><input id="novelty" min=0 max=100 value=50 type="range"></input>
       </div>
       <div class="full-row">
-        <span>Temprature Noise: </span><input id="noise" min=0 max=100 value=0 type="range"></input>
+        <span>Temprature Noise: </span><input id="noise" min=0 max=100 value=10 type="range"></input>
       </div>
       <div class="full-row">
-        <span>Number of Mutations: </span><input id="mutations" min=1 max=5 value=1 type="range"></input>
+        <span>Number of Mutations: </span><input id="mutations" min=1 max=5 value=2 type="range"></input>
       </div>
       <hr>
       <div class="full-row">
@@ -352,6 +352,16 @@
           "warp_y": false,
           "border_bot": true,
           "border_top": true,
+          "border_left": false,
+          "border_right": false
+        },
+        "baba":{
+          "tp_size": 3,
+          "pop_size": 3,
+          "warp_x": false,
+          "warp_y": false,
+          "border_bot": false,
+          "border_top": false,
           "border_left": false,
           "border_right": false
         }

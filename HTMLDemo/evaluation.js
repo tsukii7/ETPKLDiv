@@ -59,16 +59,56 @@ function addBorder(matrix) {
     return newMatrix;
 }
 
-function getNewFitness(map_array){
+function getAdditionFitness(map_array){
     let decode_map = deepCopyChar2DArray(map_array);
     for (let i = 0; i < map_array.length; i++) {
         for (let j = 0; j < map_array[i].length; j++) {
             decode_map[i][j] = decode_key[String.fromCharCode(decode_map[i][j]+65)];
+            if (decode_map[i][j] == undefined){
+                debugger
+            }
         }
     }
-    debugger
     let init_state = newState(addBorder(decode_map));
 
+    let objsSet = {}, wordsSet = {};
+    let objTotal = 0, wordTotal = 0;
+    let nounSet = ['baba', 'skull', 'flag', 'floor', 'grass', 'lava', 'rock', 'wall', 'keke', 'goop', 'love']
+
+    for (const objName in init_state.sort_phys) {
+        if (Object.hasOwnProperty.call(init_state.sort_phys, objName)) {
+            let objects = init_state.sort_phys[objName];
+            objsSet[objName] = objects.length;
+            objTotal += objects.length;
+        }
+    }
+
+    for (let i = 0; i < init_state.words?.length; i++) {
+        let wordName = init_state.words[i]?.name;
+        if (nounSet.includes(wordName)){
+            wordsSet[wordName] = wordName in wordsSet ? wordsSet[wordName] + 1 : 1;
+            wordTotal += 1;
+        }
+    }
+
+    let objCnt = 0, wordCnt = 0;
+    for (let i = 0; i < nounSet.length; i++) {
+        if ((nounSet[i] in objsSet) && !(nounSet[i] in wordsSet)){
+            objCnt += objsSet[nounSet[i]];
+        }
+        else if (!(nounSet[i] in objsSet) && (nounSet[i] in wordsSet)){
+            wordCnt += wordsSet[nounSet[i]];
+        }
+    }
+    const u = 0.85 * objCnt / objTotal + 0.15 * wordCnt / wordTotal;
+    const p = init_state.rules.some(rule => rule.includes('-is-you')) ?
+        (init_state.rules.some(rule => rule.includes('')) ? 0 : 1 ) : 1;
+    let spaceCount = init_state.orig_map.reduce((count, row) => count + row.filter(cell => cell === " ").length, 0);
+    const s = spaceCount / ((init_state.orig_map.length-2) * (init_state.orig_map[0].length-2));
+
+    const addFitness = -1 * (u + p + 0.1 * s);
+
+    return addFitness;
 }
 
 // module.exports = {

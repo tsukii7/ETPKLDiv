@@ -29,12 +29,16 @@ var ETPKLDiv = (function () {
         let new_x=(x+dx)%map[0].length;
         key += map[new_y][new_x] + ",";
         pattern[pattern.length-1].push(map[new_y][new_x]);
+        if(map[new_y][new_x] == undefined){
+          debugger
+        }
       }
     }
     return [key, pattern];
   }
 
   function calculateTilePatternProbabilities(maps, tp_sizes, warp = null, borders = null){
+    debugger
     let p = {};
     let patterns = {};
     let border_patterns = {};
@@ -88,6 +92,7 @@ var ETPKLDiv = (function () {
         }
       }
     }
+    debugger
     return [p, patterns, border_patterns];
   }
 
@@ -143,7 +148,7 @@ var ETPKLDiv = (function () {
         this._map.push([]);
         this._locked.push([]);
         for(let j=0; j<this._width; j++){
-          this._map[i].push(0);
+          this._map[i].push(1);
           this._locked[i].push(false);
         }
       }
@@ -209,6 +214,7 @@ var ETPKLDiv = (function () {
     }
 
     _calculateKLDivergence(p, q, w){
+      debugger
       let x = [];
       let total_p = 0;
       for (let key in p){
@@ -246,9 +252,11 @@ var ETPKLDiv = (function () {
       this._calculateKLDivergence(probs[tp_size], this._tpdict.getQProbability(tp_size), inter_weight);
     }
 
+    calculateNewFitness(){
+      this._fitness += getAdditionFitness(this._map);
+    }
+
     getFitness(){
-      // debugger
-      // getNewFitness(this._map);
       return this._fitness;
     }
 
@@ -280,13 +288,21 @@ var ETPKLDiv = (function () {
           }
           if("right" in borders && borders["right"] && x == clone._width - size){
             border_patterns = border_patterns.concat(clone._tpdict.getTPBorderArray(size, "right"));
-          }
+          }          clone._applyTP(patterns[rand], x, y);
         }
         if(border_patterns.length > 0){
           patterns = border_patterns;
         }
         if(patterns.length > 0){
-          clone._applyTP(patterns[clone._random.nextInt(patterns.length)], x, y);
+          let rand = clone._random.nextInt(patterns.length);
+          // for (let j = 0; j <patterns[rand].length; j++) {
+          //   for (let k = 0; k < patterns[rand][0].length; k++) {
+          //     if (patterns[rand][j][k] == undefined){
+          //       debugger
+          //     }
+          //   }
+          // }
+          clone._applyTP(patterns[rand], x, y);
           clone._fitness = null;
           clone._first = null;
           clone._second = null;
@@ -361,6 +377,7 @@ var ETPKLDiv = (function () {
     _computeDivergenceFintess(chromosomes, inter_weight){
       for(let c of chromosomes){
         c.calculateDivergence(this._tp_size, inter_weight);
+        c.calculateNewFitness();
       }
     }
 
