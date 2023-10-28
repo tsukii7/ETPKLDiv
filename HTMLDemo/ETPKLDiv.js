@@ -38,7 +38,6 @@ var ETPKLDiv = (function () {
   }
 
   function calculateTilePatternProbabilities(maps, tp_sizes, warp = null, borders = null){
-    debugger
     let p = {};
     let patterns = {};
     let border_patterns = {};
@@ -92,7 +91,6 @@ var ETPKLDiv = (function () {
         }
       }
     }
-    debugger
     return [p, patterns, border_patterns];
   }
 
@@ -111,8 +109,12 @@ var ETPKLDiv = (function () {
       if (sizes.indexOf(1)<0){
         sizes.push(1);
       }
+      this._q_prob = []
+      for (let i = 0; i < input_samples.length; i++) {
+        const [probs, patterns, border_patterns] = calculateTilePatternProbabilities([input_samples[i]], sizes, warp, borders);
+        this._q_prob.push(probs);
+      }
       const [probs, patterns, border_patterns] = calculateTilePatternProbabilities(input_samples, sizes, warp, borders);
-      this._q_prob = probs;
       this._patterns = patterns;
       this._border_patterns = border_patterns;
     }
@@ -126,7 +128,15 @@ var ETPKLDiv = (function () {
     }
 
     getQProbability(size){
-      return this._q_prob[size];
+      if (!(this._q_prob[size][1] instanceof Number)){
+        let prob_array = [];
+        for (let i = 0; i < this._q_prob.length; i++) {
+          prob_array.push(this._q_prob[i][size]);
+        }
+        return prob_array;
+      }else{
+        return this._q_prob[size];
+      }
     }
   }
 
@@ -213,34 +223,42 @@ var ETPKLDiv = (function () {
       }
     }
 
-    _calculateKLDivergence(p, q, w){
-      debugger
-      let x = [];
-      let total_p = 0;
-      for (let key in p){
-        x.push(key);
-        total_p += p[key];
-      }
-      let total_q = 0;
-      for (let key in q){
-        x.push(key);
-        total_q += q[key];
-      }
-      this._first = 0;
-      this._second = 0;
-      for (let key of x){
-        let p_dash = (this._epsilon)/((total_p + this._epsilon) * (1 + this._epsilon));
-        let q_dash = (this._epsilon)/((total_q + this._epsilon) * (1 + this._epsilon));
-        if (key in p){
-          p_dash = (p[key] + this._epsilon)/((total_p + this._epsilon) * (1 + this._epsilon));
+    _calculateKLDivergence(p, qArray, w){
+      let minFitness = -999999999;
+      for (let i = 0; i < qArray.length; i++) {
+        let q = qArray[i];
+
+        let x = [];
+        let total_p = 0;
+        for (let key in p){
+          x.push(key);
+          total_p += p[key];
         }
-        if (key in q){
-          q_dash = (q[key] + this._epsilon)/((total_q + this._epsilon) * (1 + this._epsilon));
+        let total_q = 0;
+        for (let key in q){
+          x.push(key);
+          total_q += q[key];
         }
-        this._first += p_dash * Math.log(p_dash/q_dash);
-        this._second += q_dash * Math.log(q_dash/p_dash);
+        this._first = 0;
+        this._second = 0;
+        for (let key of x){
+          let p_dash = (this._epsilon)/((total_p + this._epsilon) * (1 + this._epsilon));
+          let q_dash = (this._epsilon)/((total_q + this._epsilon) * (1 + this._epsilon));
+          if (key in p){
+            p_dash = (p[key] + this._epsilon)/((total_p + this._epsilon) * (1 + this._epsilon));
+          }
+          if (key in q){
+            q_dash = (q[key] + this._epsilon)/((total_q + this._epsilon) * (1 + this._epsilon));
+          }
+          this._first += p_dash * Math.log(p_dash/q_dash);
+          this._second += q_dash * Math.log(q_dash/p_dash);
+        }
+        let fitness = -(w * this._first + (1-w) * this._second);
+        if (fitness > minFitness){
+          minFitness = fitness;
+        }
       }
-      this._fitness = -(w * this._first + (1-w) * this._second);
+      this._fitness = minFitness;
     }
 
     calculateDivergence(tp_size, inter_weight=0.5){
@@ -288,20 +306,13 @@ var ETPKLDiv = (function () {
           }
           if("right" in borders && borders["right"] && x == clone._width - size){
             border_patterns = border_patterns.concat(clone._tpdict.getTPBorderArray(size, "right"));
-          }          clone._applyTP(patterns[rand], x, y);
+          }
         }
         if(border_patterns.length > 0){
           patterns = border_patterns;
         }
         if(patterns.length > 0){
           let rand = clone._random.nextInt(patterns.length);
-          // for (let j = 0; j <patterns[rand].length; j++) {
-          //   for (let k = 0; k < patterns[rand][0].length; k++) {
-          //     if (patterns[rand][j][k] == undefined){
-          //       debugger
-          //     }
-          //   }
-          // }
           clone._applyTP(patterns[rand], x, y);
           clone._fitness = null;
           clone._first = null;
