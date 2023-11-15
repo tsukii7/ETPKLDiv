@@ -19,6 +19,15 @@ var ETPKLDiv = (function () {
     }
   }
 
+  // ------------> x
+  // |
+  // |
+  // |
+  // v
+  // y
+  // 提取 map 中从 (x, y) 开始的 size * size 的正方形区域，越界则返回另一侧
+  // 把该区域每个字符用 "," 拼接作为 key
+  // 把该区域存二维列表作为 pattern
   function calculateTilePatternKey(map,x,y,size){
     let pattern = [];
     let key = "";
@@ -37,6 +46,14 @@ var ETPKLDiv = (function () {
     return [key, pattern];
   }
 
+  // maps: 需要提取 tile pattern 的 二维地图的列表
+  // tp_sizes: tile pattern 的尺寸列表
+  // warp: 映射，键为 "x" "y"，值为 true/false，表示是否在该维度上跨越边界
+  // borders: 映射，键为 "top" "bot" "left" "right"，值为 true/false，表示是否在该边上提取 tile pattern
+  // 返回值: [p, patterns, border_patterns]
+  // p: p[size][key] 为 maps 中 size * size 的 tile pattern 由 calculateTilePatternKey 得到的 key 出现的次数
+  // patterns: patterns[size] 为 maps 中 size * size 的 tile pattern 由 calculateTilePatternKey 得到的 pattern 列表
+  // border_patterns: border_patterns[size][loc] 为 patterns[size] 中位于边 loc 的 tile pattern 列表，并从 patterns[size] 中删除
   function calculateTilePatternProbabilities(maps, tp_sizes, warp = null, borders = null){
     let p = {};
     let patterns = {};
@@ -128,7 +145,7 @@ var ETPKLDiv = (function () {
     }
 
     getQProbability(size){
-      if (!(this._q_prob[size][1] instanceof Number)){
+      if (!(this._q_prob[1][1] instanceof Number)){
         let prob_array = [];
         for (let i = 0; i < this._q_prob.length; i++) {
           prob_array.push(this._q_prob[i][size]);
@@ -213,6 +230,7 @@ var ETPKLDiv = (function () {
       return clone;
     }
 
+    // 把 pattern 复制到坐标 (x, y) 处
     _applyTP(pattern, x, y){
       for(let i=0; i<pattern.length; i++){
         for(let j=0; j<pattern[i].length; j++){
@@ -224,7 +242,9 @@ var ETPKLDiv = (function () {
     }
 
     _calculateKLDivergence(p, qArray, w){
-      let minFitness = -999999999;
+      let minFitness = -999999,
+        minFirst = -999999,
+        minSecond = -999999;
       for (let i = 0; i < qArray.length; i++) {
         let q = qArray[i];
 
@@ -256,9 +276,13 @@ var ETPKLDiv = (function () {
         let fitness = -(w * this._first + (1-w) * this._second);
         if (fitness > minFitness){
           minFitness = fitness;
+          minFirst = this._first;
+          minSecond = this._second;
         }
       }
       this._fitness = minFitness;
+      this._first = minFirst;
+      this._second = minSecond;
     }
 
     calculateDivergence(tp_size, inter_weight=0.5){
@@ -268,10 +292,12 @@ var ETPKLDiv = (function () {
       }
       const [probs,patterns,border_patterns] = calculateTilePatternProbabilities([this._map], [tp_size]);
       this._calculateKLDivergence(probs[tp_size], this._tpdict.getQProbability(tp_size), inter_weight);
+
     }
 
     calculateNewFitness(){
-      this._fitness += getAdditionFitness(this._map);
+      let t = getAdditionFitness(this._map)
+      this._fitness += t;
     }
 
     getFitness(){

@@ -100,14 +100,16 @@ function getAdditionFitness(map_array){
             wordCnt += wordsSet[nounSet[i]];
         }
     }
-    const u = 0.85 * objCnt / objTotal + 0.15 * wordCnt / wordTotal;
+
+    const u = (objTotal === 0? 0 : 0.85 * objCnt / objTotal) + (wordTotal === 0 ? 0 : 0.15 * wordCnt / wordTotal);
     const p = init_state.rules.some(rule => rule.includes('-is-you')) ?
         (init_state.rules.some(rule => rule.includes('')) ? 0 : 1 ) : 1;
     let spaceCount = init_state.orig_map.reduce((count, row) => count + row.filter(cell => cell === " ").length, 0);
     const s = spaceCount / ((init_state.orig_map.length-2) * (init_state.orig_map[0].length-2));
 
     // const addFitness = -1 * (u + p + 0.1 * s);
-    const addFitness = -10 * (u + 10 * p + 0.1 * s);
+    const addFitness = -1 * (u + p + 10 * s);
+    // const addFitness = -10 * (u + 10 * p + 0.1 * s);
     return addFitness;
 }
 
