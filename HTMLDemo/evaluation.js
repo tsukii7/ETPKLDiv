@@ -102,15 +102,26 @@ function getAdditionFitness(map_array){
     }
 
     const u = (objTotal === 0? 0 : 0.85 * objCnt / objTotal) + (wordTotal === 0 ? 0 : 0.15 * wordCnt / wordTotal);
-    const p = init_state.rules.some(rule => rule.includes('-is-you')) ?
-        (init_state.rules.some(rule => rule.includes('')) ? 0 : 1 ) : 1;
+    const p = check_win(init_state);
     let spaceCount = init_state.orig_map.reduce((count, row) => count + row.filter(cell => cell === " ").length, 0);
     const s = spaceCount / ((init_state.orig_map.length-2) * (init_state.orig_map[0].length-2));
+    const rules_reward = 0.2 * init_state.rules.length
+    const obj_reward = 0.1 * objTotal
 
     // const addFitness = -1 * (u + p + 0.1 * s);
-    const addFitness = -1 * (u + p + 10 * s);
+    const addFitness = -1 * (u + 10 * p + 0.1 * s) + rules_reward + obj_reward;
     // const addFitness = -10 * (u + 10 * p + 0.1 * s);
     return addFitness;
+}
+
+function check_win(state) {
+    const has_players = state.players.length > 0;
+    const has_win_word = state.words.some(word => word.name === 'win')
+
+    if(has_win_word && has_players)
+        return 0
+    else
+        return 1
 }
 
 // module.exports = {
