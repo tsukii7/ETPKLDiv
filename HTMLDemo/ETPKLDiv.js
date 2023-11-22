@@ -497,8 +497,8 @@ var ETPKLDiv = (function () {
         let c = this._rankSelection(this._chromosomes).mutate(this._tp_size, mut_times, this._borders);
         new_chromosomes.push(c);
       }
+      this._computeDivergenceFintess(new_chromosomes, inter_weight);
       this._chromosomes = this._chromosomes.concat(new_chromosomes);
-      this._computeDivergenceFintess(this._chromosomes, inter_weight);
       this._sortChromosomes(this._chromosomes, noise);
       this._chromosomes = this._chromosomes.splice(this._chromosomes.length/2);
       this._iteration += 1;

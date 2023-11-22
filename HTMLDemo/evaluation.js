@@ -131,6 +131,25 @@ function check_win(state) {
     return 1
 }
 
-// module.exports = {
-//     getNewFitness: getNewFitness
-// }
+function get_random_maps(size){
+    let maps = []
+    let fitness = []
+    const MAP_SIZE = 10
+    for (let i = 0; i < size; i++) {
+        let map = []
+        for (let j = 0; j < MAP_SIZE; j++) {
+            map.push([])
+            for (let k = 0; k < MAP_SIZE; k++) {
+                // random int from 1 to 33
+                map[j].push(Math.floor(Math.random() * 33) + 1)
+            }
+        }
+        maps.push(map)
+    }
+    return maps
+}
+
+exports.get_random_maps = get_random_maps;
+exports.getAdditionFitness = getAdditionFitness;
+exports.decodeMap = decodeMap;
+exports.addBorder = addBorder;

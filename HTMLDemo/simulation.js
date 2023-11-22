@@ -286,7 +286,7 @@ function objAtPos(x, y, om) {
 function isWord(e) {
     if (e.type == undefined)
         return false;
-    return e.type == "word";
+    return e.type == "word" && e.name != "is";
 }
 
 function isPhys(e) {
@@ -1242,69 +1242,5 @@ function level2JSON(lvl = null, ID = 0, name = "", author = "Baba") {
 }
 
 
-// module.exports = {
-//     setupLevel: function (m) {
-//         makeLevel(m);
-//     },
-//     getGamestate: function () {
-//         return game_state;
-//     },
-//     clearLevel: function (state) {
-//         clearLevel(state);
-//     },
-//     setState: function (state, m) {
-//         setStateByMap(state, m)
-//     },
-//     newState: function (m) {
-//         return newState(m);
-//     },
-//     showState: function (s) {
-//         return showState(s);
-//     },
-//
-//     parseMap: function (m) {
-//         return parseMap(m);
-//     },
-//     map2Str: function (m) {
-//         return map2Str(m);
-//     },
-//     doubleMap2Str: function (om, bm) {
-//         return doubleMap2Str(om, bm);
-//     },
-//     splitMap: function (m) {
-//         return splitMap(m);
-//     },
-//
-//
-//     assignMapObjs: function (state) {
-//         assignMapObjs(state);
-//     },
-//     nextMove: function (action, gs) {
-//         return nextMove(action, gs);
-//     },
-//     interpretRules: function (state) {
-//         interpretRules(state)
-//     },
-//     win: function (p, w) {
-//         return win(p, w);
-//     },
-//
-//     movePlayers: function (d, m, p) {
-//         movePlayers(d, m, p);
-//     },
-//     moveAutoMovers: function (m, p) {
-//         moveAutoMovers(m, p);
-//     },
-//
-//     miniSol: function (s) {
-//         return minimizeSolution(s);
-//     },
-//     transSol: function (s) {
-//         return translateSol(s);
-//     },
-//
-//     getMapKey: function () {
-//         return map_key;
-//     }
-// }
-//
+exports.newState = newState
+
