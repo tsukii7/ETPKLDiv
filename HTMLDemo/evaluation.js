@@ -59,17 +59,22 @@ function addBorder(matrix) {
     return newMatrix;
 }
 
-function getAdditionFitness(map_array){
+function decodeMap(map_array) {
     let decode_map = deepCopyChar2DArray(map_array);
     for (let i = 0; i < map_array.length; i++) {
         for (let j = 0; j < map_array[i].length; j++) {
-            decode_map[i][j] = decode_key[String.fromCharCode(decode_map[i][j]+65)];
-            if (decode_map[i][j] == undefined){
-                debugger
-            }
+            decode_map[i][j] = decode_key[String.fromCharCode(decode_map[i][j] + 65)];
+            // if (decode_map[i][j] == undefined) {
+            //     debugger
+            // }
         }
     }
-    let init_state = newState(addBorder(decode_map));
+    return decode_map;
+}
+
+function getAdditionFitness(map_array){
+    let decode_map = addBorder(decodeMap(map_array));
+    let init_state = newState(decode_map);
 
     let objsSet = {}, wordsSet = {};
     let objTotal = 0, wordTotal = 0;
@@ -109,7 +114,10 @@ function getAdditionFitness(map_array){
     const obj_reward = 0.1 * objTotal
 
     // const addFitness = -1 * (u + p + 0.1 * s);
-    const addFitness = -1 * (u + 10 * p + 0.1 * s) + rules_reward + obj_reward;
+    const addFitness = -1 * (u +  p + 10 * s) + rules_reward*0 + obj_reward*0;
+    if (p === 0){
+       run_keke(decode_map, 10000);
+    }
     // const addFitness = -10 * (u + 10 * p + 0.1 * s);
     return addFitness;
 }
@@ -120,8 +128,7 @@ function check_win(state) {
 
     if(has_win_word && has_players)
         return 0
-    else
-        return 1
+    return 1
 }
 
 // module.exports = {
