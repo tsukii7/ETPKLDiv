@@ -242,9 +242,9 @@ var ETPKLDiv = (function () {
     }
 
     _calculateKLDivergence(p, qArray, w){
-      let minFitness = -999999,
-        minFirst = -999999,
-        minSecond = -999999;
+      let minFitness = -Infinity,
+        minFirst = -Infinity,
+        minSecond = -Infinity;
       for (let i = 0; i < qArray.length; i++) {
         let q = qArray[i];
 
@@ -493,6 +493,7 @@ var ETPKLDiv = (function () {
       }
 
       let new_chromosomes = [];
+
       for(let j=0; j<this._chromosomes.length; j++){
         let c = this._rankSelection(this._chromosomes).mutate(this._tp_size, mut_times, this._borders);
         new_chromosomes.push(c);
