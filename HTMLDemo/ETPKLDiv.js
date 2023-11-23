@@ -24,7 +24,10 @@ class Chromosome{
           this._locked[i].push(false);
         }
       }
+
       this._solution = ''
+      this._rule_objs_start = []
+      this._rule_objs_end = []
     }
 
     randomInitialize(tp_sizes, borders){

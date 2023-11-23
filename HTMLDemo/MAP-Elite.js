@@ -92,13 +92,10 @@ class MAPElite {
   update_archive(chromosomes) {
     for (let i = 0; i < chromosomes.length; i++) {
       const chromosome = chromosomes[i];
-      const map = addBorder(decodeMap(chromosome._map))
-      const result = this.solve_map(map)
-      const solution = result.solution
-      if (solution.length === 0) continue
+      if (chromosome._solution.length === 0) continue
       
-      const rule_objs_start = result.start
-      const rule_objs_end = result.end
+      const rule_objs_start = chromosome._rule_objs_start
+      const rule_objs_end = chromosome._rule_objs_end
       const behaviorCharacteristic_start = this.ruleObjs_to_behaviorCharacteristic(rule_objs_start)
       const behaviorCharacteristic_end = this.ruleObjs_to_behaviorCharacteristic(rule_objs_end)
       const behaviorCharacteristic = behaviorCharacteristic_start << 16 | behaviorCharacteristic_end
@@ -125,14 +122,16 @@ class MAPElite {
   
   }
   
+
   run() {
     let etpkldiv = new ETPKLDiv();
-    etpkldiv.initializePatternDictionary(inputData.map, tp_size,
-      {"x": warp_x, "y": warp_y},
-      {"left": border_left, "right": border_right, "top": border_top, "bot": border_bot});
-    etpkldiv.initializeGeneration(10, 10, pop_size);
-    // 还差把初始化的种群同步到MAP-Elite中，和update_archive
-    
+    let inputData = [];
+
+    etpkldiv.initializePatternDictionary(this.maps, 3,
+      {"x": false, "y": false},
+      {"left": false, "right": false, "top": false, "bot": false});
+    etpkldiv.initializeGeneration(10, 10, 2);
+
     this.random_init();
     for (let i = 0; i < this.iterations; i++) {
       let to_evaluate = [];
@@ -140,14 +139,52 @@ class MAPElite {
       this.evaluate(to_evaluate);
       this.update_archive(to_evaluate);
     }
-    
-    
+
+
   }
-  
+
 }
+
+function loadMapData() {
+  return new Promise((resolve, reject) => {
+    const fs = require('fs');
+    fs.readFile('data/baba.txt', 'utf8', function (err, dataStr) {
+      if (err) {
+        reject(err);
+      } else {
+        let maps = [];
+        let map = dataStr.split("\r\n\r\n\r\n");
+        for (let m of map) {
+          let lines = m.split("\r\n");
+          if (lines.length > 0) {
+            maps.push([]);
+            for (let l of lines) {
+              l = l.trim();
+              if (l.length > 0) {
+                maps[maps.length - 1].push([]);
+                for (let c of l) {
+                  maps[maps.length - 1][(maps[maps.length - 1]).length - 1].push(c.charCodeAt(0) - 'A'.charCodeAt(0));
+                }
+              }
+            }
+          }
+        }
+        resolve(maps);
+      }
+    });
+  });
+}
+
 
 function main() {
   let map = new MAPElite();
-  map.run();
-  
+  loadMapData().then(maps => {
+    map.maps = maps;
+    map.run();
+  }).catch(error => {
+    console.error(error);
+  });
+
 }
+
+main();
