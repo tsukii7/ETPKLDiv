@@ -21,7 +21,6 @@ class MAPElite {
     this.mutation = mutation;
     // archive cell 中的chromosomes按照fitness降序排列
     this.archive = {};
-    this.cell_size = 5;
     this.n_evals = 0;
     this.max_fitness = -Infinity;
   }
@@ -102,18 +101,11 @@ class MAPElite {
       
       if (behaviorCharacteristic in this.archive) {
         const old_chromosomes = this.archive[behaviorCharacteristic]
-        for (let j = 0; j < old_chromosomes.length; j++) {
-          const old_chromosome = old_chromosomes[j];
-          if (chromosome._fitness > old_chromosome._fitness) {
-            old_chromosomes.splice(j, 0, chromosome)
-            break
-          }
-        }
-        if (old_chromosomes.length > this.cell_size) {
-          old_chromosomes.pop()
+        if (chromosome._fitness > old_chromosomes._fitness) {
+          this.archive[behaviorCharacteristic] = chromosome
         }
       } else {
-        this.archive[behaviorCharacteristic] = [chromosome]
+        this.archive[behaviorCharacteristic] = chromosome
       }
     }
   }
@@ -122,16 +114,16 @@ class MAPElite {
   
   }
   
-
+  
   run() {
     let etpkldiv = new ETPKLDiv();
     let inputData = [];
-
+    
     etpkldiv.initializePatternDictionary(this.maps, 3,
       {"x": false, "y": false},
       {"left": false, "right": false, "top": false, "bot": false});
     etpkldiv.initializeGeneration(10, 10, 2);
-
+    
     this.random_init();
     for (let i = 0; i < this.iterations; i++) {
       let to_evaluate = [];
@@ -139,10 +131,10 @@ class MAPElite {
       this.evaluate(to_evaluate);
       this.update_archive(to_evaluate);
     }
-
-
+    
+    
   }
-
+  
 }
 
 function loadMapData() {
@@ -184,7 +176,7 @@ function main() {
   }).catch(error => {
     console.error(error);
   });
-
+  
 }
 
 main();
