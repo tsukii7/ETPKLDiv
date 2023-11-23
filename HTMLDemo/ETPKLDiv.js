@@ -1,5 +1,3 @@
-const mutation_ways = require('./MAP-Elite')
-
 var ETPKLDiv = (function () {
       'use strict';
 
@@ -484,6 +482,7 @@ var ETPKLDiv = (function () {
           this._iteration = 0;
 
           this._chromosomes = [];
+          const {mutation_ways} = require('./MAP-Elite')
           for (let i = 0; i < pop_size; i++) {
             this._chromosomes.push(new Chromosome(this._tpdict, this._random, width, height));
             switch (flag) {
