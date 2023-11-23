@@ -1,6 +1,3 @@
-const {Chromosome} = require("./ETPKLDiv");
-
-
 const decode_key = {
   'B': " ",  // empty
   // 'B': ".",  // empty
@@ -131,27 +128,7 @@ function check_win(state) {
   return 1
 }
 
-function get_random_chromosomes(size){
-    let chromosomes = []
-    let fitness = []
-    const MAP_SIZE = 10
-    for (let i = 0; i < size; i++) {
-        let map = []
-        for (let j = 0; j < MAP_SIZE; j++) {
-            map.push([])
-            for (let k = 0; k < MAP_SIZE; k++) {
-                // random int from 1 to 33
-                map[j].push(Math.floor(Math.random() * 33) + 1)
-            }
-        }
-        const chromosome = new Chromosome(null, null, MAP_SIZE, MAP_SIZE)
-        chromosome._map = map
-        chromosomes.push(chromosome)
-    }
-    return chromosomes
-}
 
-exports.get_random_chromosomes = get_random_chromosomes;
 exports.getAdditionFitness = getAdditionFitness;
 exports.decodeMap = decodeMap;
 exports.addBorder = addBorder;
