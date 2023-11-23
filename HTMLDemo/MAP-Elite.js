@@ -10,15 +10,17 @@ const mutation_ways = {
 
 class MAPElite {
   constructor(random_num = 500,
+              mutate_num = 500,
               evaluations = 10000,
               w = 0.5,
               noise = 0,
-              mutation = 1) {
+              mut_times = 1) {
     this.evaluations = evaluations;
     this.random_num = random_num;
+    this.mutate_num = mutate_num;
     this.w = w;
     this.noise = noise;
-    this.mutation = mutation;
+    this.mut_times = mut_times;
     // archive cell 中的chromosomes按照fitness降序排列
     this.archive = {};
     this.n_evals = 0;
@@ -77,11 +79,8 @@ class MAPElite {
     return behaviorCharacteristic
   }
   
-  evaluate(chromosomes) {
-    for (let i = 0; i < chromosomes.length; i++) {
-      const chromosome = chromosomes[i];
-      chromosome._fitness = getAdditionFitness(chromosome._map)
-    }
+  evaluate(es, to_evaluate) {
+    es._computeDivergenceFintess(to_evaluate, this.w);
   }
   
   update_archive(chromosomes) {
@@ -106,8 +105,15 @@ class MAPElite {
     }
   }
   
-  mutate() {
-  
+  mutate(es) {
+    es._chromosomes.sort(() => Math.random() - 0.5);
+
+    let new_chromosomes = [];
+    for (let i = 0; i < this.mutate_num; i++) {
+      let c = es._chromosomes[i].mutate(es._tp_size, this.mut_times, es._borders);
+      new_chromosomes.push(c);
+    }
+    return new_chromosomes;
   }
   
   
@@ -119,15 +125,15 @@ class MAPElite {
       {"x": false, "y": false},
       {"left": false, "right": false, "top": false, "bot": false});
     etpkldiv.initializeGeneration(10, 10, this.random_num, mutation_ways['RANDOM']);
+    let n_evals = this.random_num;
 
-    for (let i = 0; i < this.iterations; i++) {
+    while (n_evals < this.evaluations) {
       let to_evaluate = [];
-      to_evaluate += this.mutate();
-      this.evaluate(to_evaluate);
+      to_evaluate += this.mutate(etpkldiv._es);
+      n_evals += to_evaluate.length;
+      this.evaluate(etpkldiv._es, to_evaluate);
       this.update_archive(to_evaluate);
     }
-    
-    
   }
   
 }
