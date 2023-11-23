@@ -289,6 +289,16 @@ function isWord(e) {
     return e.type == "word" && e.name != "is";
 }
 
+function isAdjective(e) {
+    const adjectives = ['you', 'win', 'kill', 'push', 'stop', 'move', 'hot', 'melt', 'open', 'shut', 'sink']
+    return e.type === "word" && adjectives.includes(e.name)
+}
+
+function isNoun(e) {
+    const nouns = ['baba', 'skull', 'flag', 'floor', 'grass', 'lava', 'rock', 'wall', 'keke', 'goop', 'love']
+    return e.type === "word" && nouns.includes(e.name)
+}
+
 function isPhys(e) {
     if (e.type == undefined)
         return false;
@@ -330,7 +340,7 @@ function interpretRules(state) {
         //horizontal pos
         var wordA = objAtPos(is.x - 1, is.y, om);
         var wordB = objAtPos(is.x + 1, is.y, om);
-        if (isWord(wordA) && isWord(wordB)) {
+        if (isNoun(wordA) && isWord(wordB)) {
             //add a new rule if not already made
             var r = wordA.name + "-" + is.name + "-" + wordB.name;
             if (rules.indexOf(r) == -1) {
@@ -349,7 +359,7 @@ function interpretRules(state) {
         //vertical pos
         var wordC = objAtPos(is.x, is.y - 1, om);
         var wordD = objAtPos(is.x, is.y + 1, om);
-        if (isWord(wordC) && isWord(wordD)) {
+        if (isNoun(wordC) && isWord(wordD)) {
             var r = wordC.name + "-" + is.name + "-" + wordD.name;
             if (rules.indexOf(r) == -1) {
                 rules.push(r);
@@ -1243,4 +1253,8 @@ function level2JSON(lvl = null, ID = 0, name = "", author = "Baba") {
 
 
 exports.newState = newState
-
+exports.isNoun = isNoun
+exports.minimizeSolution = minimizeSolution
+exports.game_state = game_state
+exports.makeLevel = makeLevel
+exports.nextMove = nextMove

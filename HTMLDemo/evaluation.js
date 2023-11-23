@@ -1,3 +1,4 @@
+const {Chromosome} = require("./ETPKLDiv");
 
 
 const decode_key = {
@@ -131,8 +132,8 @@ function check_win(state) {
     return 1
 }
 
-function get_random_maps(size){
-    let maps = []
+function get_random_chromosomes(size){
+    let chromosomes = []
     let fitness = []
     const MAP_SIZE = 10
     for (let i = 0; i < size; i++) {
@@ -144,12 +145,14 @@ function get_random_maps(size){
                 map[j].push(Math.floor(Math.random() * 33) + 1)
             }
         }
-        maps.push(map)
+        const chromosome = new Chromosome(null, null, MAP_SIZE, MAP_SIZE)
+        chromosome._map = map
+        chromosomes.push(chromosome)
     }
-    return maps
+    return chromosomes
 }
 
-exports.get_random_maps = get_random_maps;
+exports.get_random_chromosomes = get_random_chromosomes;
 exports.getAdditionFitness = getAdditionFitness;
 exports.decodeMap = decodeMap;
 exports.addBorder = addBorder;

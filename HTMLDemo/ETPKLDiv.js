@@ -2,162 +2,7 @@
 
 // import {getNewFitness} from "./evaluation";
 
-var ETPKLDiv = (function () {
-  'use strict';
-
-  class Random{
-    constructor(seed){
-      //seeding is not working yet
-    }
-
-    next(){
-      return Math.random();
-    }
-
-    nextInt(max){
-      return Math.floor(Math.random() * max);
-    }
-  }
-
-  // ------------> x
-  // |
-  // |
-  // |
-  // v
-  // y
-  // 提取 map 中从 (x, y) 开始的 size * size 的正方形区域，越界则返回另一侧
-  // 把该区域每个字符用 "," 拼接作为 key
-  // 把该区域存二维列表作为 pattern
-  function calculateTilePatternKey(map,x,y,size){
-    let pattern = [];
-    let key = "";
-    for(let dy=0;dy<size;dy++){
-      pattern.push([]);
-      for(let dx=0; dx<size; dx++){
-        let new_y=(y+dy)%map.length;
-        let new_x=(x+dx)%map[0].length;
-        key += map[new_y][new_x] + ",";
-        pattern[pattern.length-1].push(map[new_y][new_x]);
-        if(map[new_y][new_x] == undefined){
-          debugger
-        }
-      }
-    }
-    return [key, pattern];
-  }
-
-  // maps: 需要提取 tile pattern 的 二维地图的列表
-  // tp_sizes: tile pattern 的尺寸列表
-  // warp: 映射，键为 "x" "y"，值为 true/false，表示是否在该维度上跨越边界
-  // borders: 映射，键为 "top" "bot" "left" "right"，值为 true/false，表示是否在该边上提取 tile pattern
-  // 返回值: [p, patterns, border_patterns]
-  // p: p[size][key] 为 maps 中 size * size 的 tile pattern 由 calculateTilePatternKey 得到的 key 出现的次数
-  // patterns: patterns[size] 为 maps 中 size * size 的 tile pattern 由 calculateTilePatternKey 得到的 pattern 列表
-  // border_patterns: border_patterns[size][loc] 为 patterns[size] 中位于边 loc 的 tile pattern 列表，并从 patterns[size] 中删除
-  function calculateTilePatternProbabilities(maps, tp_sizes, warp = null, borders = null){
-    let p = {};
-    let patterns = {};
-    let border_patterns = {};
-    for(let size of tp_sizes){
-      p[size] = {};
-      patterns[size] = [];
-      border_patterns[size] = {"top": [], "bot": [], "left": [], "right": []};
-      for(let i=0; i<maps.length; i++){
-        let map = maps[i];
-        let ySize = size;
-        if(warp != null && "y" in warp && warp["y"]){
-          ySize = 1;
-        }
-        for(let y=0;y<map.length-ySize+1;y++){
-          let xSize = size;
-          if(warp != null && "x" in warp && warp["x"]){
-            xSize = 1;
-          }
-          for(let x=0; x<map[y].length-xSize+1;x++){
-            const [key,pattern]=calculateTilePatternKey(map,x,y,size);
-            if(!(key in p[size])){
-              p[size][key] = 0;
-            }
-            p[size][key] += 1;
-            if(borders != null){
-              let temp_border = false;
-              if("top" in borders && borders["top"] && y == 0){
-                temp_border = true;
-                border_patterns[size]["top"].push(pattern);
-              }
-              if("bot" in borders && borders["bot"] && y == map.length-size){
-                temp_border = true;
-                border_patterns[size]["bot"].push(pattern);
-              }
-              if("left" in borders && borders["left"] && x == 0){
-                temp_border = true;
-                border_patterns[size]["left"].push(pattern);
-              }
-              if("right" in borders && borders["right"] && x == map[y].length-size){
-                temp_border = true;
-                border_patterns[size]["right"].push(pattern);
-              }
-              if(!temp_border){
-                patterns[size].push(pattern);
-              }
-            }
-            else{
-              patterns[size].push(pattern);
-            }
-          }
-        }
-      }
-    }
-    return [p, patterns, border_patterns];
-  }
-
-  class TPDict{
-    constructor(input_samples, sizes, warp=null, borders=null){
-      //rotation and flipping need to be added
-      this._patterns = {};
-      this._q_prob = {};
-      if(!(input_samples[0][0] instanceof Array)){
-        input_samples = [input_samples];
-      }
-      if(!(sizes instanceof Array)){
-        sizes=[sizes];
-      }
-      sizes = sizes.slice();
-      if (sizes.indexOf(1)<0){
-        sizes.push(1);
-      }
-      this._q_prob = []
-      for (let i = 0; i < input_samples.length; i++) {
-        const [probs, patterns, border_patterns] = calculateTilePatternProbabilities([input_samples[i]], sizes, warp, borders);
-        this._q_prob.push(probs);
-      }
-      const [probs, patterns, border_patterns] = calculateTilePatternProbabilities(input_samples, sizes, warp, borders);
-      this._patterns = patterns;
-      this._border_patterns = border_patterns;
-    }
-
-    getTPArray(size){
-      return this._patterns[size];
-    }
-
-    getTPBorderArray(size, loc){
-      return this._border_patterns[size][loc];
-    }
-
-    getQProbability(size){
-      if (!(this._q_prob[1][1] instanceof Number)){
-        let prob_array = [];
-        for (let i = 0; i < this._q_prob.length; i++) {
-          prob_array.push(this._q_prob[i][size]);
-        }
-        return prob_array;
-      }else{
-        return this._q_prob[size];
-      }
-    }
-  }
-
-  class Chromosome{
+class Chromosome{
     constructor(tpdict, random, width, height){
       this._tpdict = tpdict;
       this._random = random;
@@ -179,6 +24,7 @@ var ETPKLDiv = (function () {
           this._locked[i].push(false);
         }
       }
+      this._solution = ''
     }
 
     randomInitialize(tp_sizes, borders){
@@ -365,6 +211,163 @@ var ETPKLDiv = (function () {
       }
     }
   }
+
+var ETPKLDiv = (function () {
+  'use strict';
+
+  class Random{
+    constructor(seed){
+      //seeding is not working yet
+    }
+
+    next(){
+      return Math.random();
+    }
+
+    nextInt(max){
+      return Math.floor(Math.random() * max);
+    }
+  }
+
+  // ------------> x
+  // |
+  // |
+  // |
+  // v
+  // y
+  // 提取 map 中从 (x, y) 开始的 size * size 的正方形区域，越界则返回另一侧
+  // 把该区域每个字符用 "," 拼接作为 key
+  // 把该区域存二维列表作为 pattern
+  function calculateTilePatternKey(map,x,y,size){
+    let pattern = [];
+    let key = "";
+    for(let dy=0;dy<size;dy++){
+      pattern.push([]);
+      for(let dx=0; dx<size; dx++){
+        let new_y=(y+dy)%map.length;
+        let new_x=(x+dx)%map[0].length;
+        key += map[new_y][new_x] + ",";
+        pattern[pattern.length-1].push(map[new_y][new_x]);
+        if(map[new_y][new_x] == undefined){
+          debugger
+        }
+      }
+    }
+    return [key, pattern];
+  }
+
+  // maps: 需要提取 tile pattern 的 二维地图的列表
+  // tp_sizes: tile pattern 的尺寸列表
+  // warp: 映射，键为 "x" "y"，值为 true/false，表示是否在该维度上跨越边界
+  // borders: 映射，键为 "top" "bot" "left" "right"，值为 true/false，表示是否在该边上提取 tile pattern
+  // 返回值: [p, patterns, border_patterns]
+  // p: p[size][key] 为 maps 中 size * size 的 tile pattern 由 calculateTilePatternKey 得到的 key 出现的次数
+  // patterns: patterns[size] 为 maps 中 size * size 的 tile pattern 由 calculateTilePatternKey 得到的 pattern 列表
+  // border_patterns: border_patterns[size][loc] 为 patterns[size] 中位于边 loc 的 tile pattern 列表，并从 patterns[size] 中删除
+  function calculateTilePatternProbabilities(maps, tp_sizes, warp = null, borders = null){
+    let p = {};
+    let patterns = {};
+    let border_patterns = {};
+    for(let size of tp_sizes){
+      p[size] = {};
+      patterns[size] = [];
+      border_patterns[size] = {"top": [], "bot": [], "left": [], "right": []};
+      for(let i=0; i<maps.length; i++){
+        let map = maps[i];
+        let ySize = size;
+        if(warp != null && "y" in warp && warp["y"]){
+          ySize = 1;
+        }
+        for(let y=0;y<map.length-ySize+1;y++){
+          let xSize = size;
+          if(warp != null && "x" in warp && warp["x"]){
+            xSize = 1;
+          }
+          for(let x=0; x<map[y].length-xSize+1;x++){
+            const [key,pattern]=calculateTilePatternKey(map,x,y,size);
+            if(!(key in p[size])){
+              p[size][key] = 0;
+            }
+            p[size][key] += 1;
+            if(borders != null){
+              let temp_border = false;
+              if("top" in borders && borders["top"] && y == 0){
+                temp_border = true;
+                border_patterns[size]["top"].push(pattern);
+              }
+              if("bot" in borders && borders["bot"] && y == map.length-size){
+                temp_border = true;
+                border_patterns[size]["bot"].push(pattern);
+              }
+              if("left" in borders && borders["left"] && x == 0){
+                temp_border = true;
+                border_patterns[size]["left"].push(pattern);
+              }
+              if("right" in borders && borders["right"] && x == map[y].length-size){
+                temp_border = true;
+                border_patterns[size]["right"].push(pattern);
+              }
+              if(!temp_border){
+                patterns[size].push(pattern);
+              }
+            }
+            else{
+              patterns[size].push(pattern);
+            }
+          }
+        }
+      }
+    }
+    return [p, patterns, border_patterns];
+  }
+
+  class TPDict{
+    constructor(input_samples, sizes, warp=null, borders=null){
+      //rotation and flipping need to be added
+      this._patterns = {};
+      this._q_prob = {};
+      if(!(input_samples[0][0] instanceof Array)){
+        input_samples = [input_samples];
+      }
+      if(!(sizes instanceof Array)){
+        sizes=[sizes];
+      }
+      sizes = sizes.slice();
+      if (sizes.indexOf(1)<0){
+        sizes.push(1);
+      }
+      this._q_prob = []
+      for (let i = 0; i < input_samples.length; i++) {
+        const [probs, patterns, border_patterns] = calculateTilePatternProbabilities([input_samples[i]], sizes, warp, borders);
+        this._q_prob.push(probs);
+      }
+      const [probs, patterns, border_patterns] = calculateTilePatternProbabilities(input_samples, sizes, warp, borders);
+      this._patterns = patterns;
+      this._border_patterns = border_patterns;
+    }
+
+    getTPArray(size){
+      return this._patterns[size];
+    }
+
+    getTPBorderArray(size, loc){
+      return this._border_patterns[size][loc];
+    }
+
+    getQProbability(size){
+      if (!(this._q_prob[1][1] instanceof Number)){
+        let prob_array = [];
+        for (let i = 0; i < this._q_prob.length; i++) {
+          prob_array.push(this._q_prob[i][size]);
+        }
+        return prob_array;
+      }else{
+        return this._q_prob[size];
+      }
+    }
+  }
+
+  
 
   class EvolutionStrategy{
     /**
@@ -735,3 +738,6 @@ var ETPKLDiv = (function () {
   return ETPKLDiv;
 
 }());
+
+exports.Chromosome = Chromosome;
+exports.ETPKLDiv = ETPKLDiv;

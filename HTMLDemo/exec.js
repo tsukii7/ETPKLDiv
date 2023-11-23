@@ -1,3 +1,5 @@
+const {minimizeSolution, game_state, makeLevel, nextMove} = require('./simulation')
+
 //read in command line arguments
 // const args = process.argv.slice(2)
 // var kekeAgent = (args.length > 0 ? args[0] : 'default');
@@ -5,7 +7,7 @@
 // var levelNum = (args.length > 2 ? args[2] : 1);
 
 var TIMEOUT = 10.0;			//10s
-var MAX_ITER = 10000;	
+var MAX_ITER = 10000;
 
 //get node.js imports
 // var kekejs = require('../agents/' + kekeAgent + '_AGENT')
@@ -74,7 +76,7 @@ function timedOut(s){
 	let maybe_end = Date.now();
 	if((maybe_end - s)/1000 > TIMEOUT){
 		return true;
-	} 
+	}
 	return false;
 }
 
