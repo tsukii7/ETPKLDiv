@@ -1,20 +1,20 @@
-const {get_random_chromosomes, addBorder, decodeMap, getAdditionFitness} = require('./evaluation')
+const { addBorder, decodeMap, getAdditionFitness} = require('./evaluation')
 const {newState, isNoun} = require('./simulation')
-const {Chromosome, ETPKLDiv} = require('./ETPKLDiv')
+const {ETPKLDiv} = require('./ETPKLDiv')
 
 // mutation ways
-const RANDOM = 1
-const ETPKLDIV = 2
+const mutation_ways = {
+  'ETPKLDiv': 0,
+  'RANDOM': 1,
+}
 
 class MAPElite {
-  constructor(population_size = 2,
-              random_num = 500,
-              iterations = 10000,
+  constructor(random_num = 500,
+              evaluations = 10000,
               w = 0.5,
               noise = 0,
               mutation = 1) {
-    this.population_size = population_size;
-    this.iterations = iterations;
+    this.evaluations = evaluations;
     this.random_num = random_num;
     this.w = w;
     this.noise = noise;
@@ -24,10 +24,6 @@ class MAPElite {
     this.cell_size = 5;
     this.n_evals = 0;
     this.max_fitness = -Infinity;
-  }
-  
-  random_init(num = this.random_num) {
-    return get_random_chromosomes(num)
   }
   
   solve_map(map) {
@@ -130,9 +126,8 @@ class MAPElite {
     etpkldiv.initializePatternDictionary(this.maps, 3,
       {"x": false, "y": false},
       {"left": false, "right": false, "top": false, "bot": false});
-    etpkldiv.initializeGeneration(10, 10, 2);
+    etpkldiv.initializeGeneration(10, 10, this.random_num, mutation_ways['RANDOM']);
 
-    this.random_init();
     for (let i = 0; i < this.iterations; i++) {
       let to_evaluate = [];
       to_evaluate += this.mutate();
@@ -188,3 +183,5 @@ function main() {
 }
 
 main();
+
+exports.mutation_ways = mutation_ways;
