@@ -16,7 +16,7 @@ var ETPKLDiv = (function () {
           return Math.floor(Math.random() * max);
         }
 
-        nextInt(min, max) {
+        nextIntRange(min, max) {
           return Math.floor(Math.random() * (max - min + 1) + min);
         }
       }
@@ -88,7 +88,7 @@ var ETPKLDiv = (function () {
         randomBlockInitialize(tp_sizes, borders) {
           for (let i = 0; i < this._height; i++) {
             for (let j = 0; j < this._width; j++) {
-              this._map[i][j] = this._random.nextInt(1, 33)
+              this._map[i][j] = this._random.nextIntRange(1, 33)
             }
           }
         }
@@ -173,7 +173,7 @@ var ETPKLDiv = (function () {
         }
 
         calculateNewFitness() {
-          let t = getAdditionFitness(this._map)
+          let t = getAdditionFitness(this)
           this._fitness += t;
         }
 

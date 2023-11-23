@@ -72,9 +72,11 @@ function decodeMap(map_array) {
   return decode_map;
 }
 
-function getAdditionFitness(map_array) {
+function getAdditionFitness(chromosome) {
+  let map_array = chromosome._map;
   let decode_map = addBorder(decodeMap(map_array));
   let init_state = newState(decode_map);
+  chromosome._rule_objs_start = init_state.rule_objs;
 
   let objsSet = {}, wordsSet = {};
   let objTotal = 0, wordTotal = 0;
@@ -106,7 +108,7 @@ function getAdditionFitness(map_array) {
   }
 
   const u = (objTotal === 0 ? 0 : 0.85 * objCnt / objTotal) + (wordTotal === 0 ? 0 : 0.15 * wordCnt / wordTotal);
-  const p = check_win(init_state);
+  const p = check_solvable(init_state);
   let spaceCount = init_state.orig_map.reduce((count, row) => count + row.filter(cell => cell === " ").length, 0);
   const s = spaceCount / ((init_state.orig_map.length - 2) * (init_state.orig_map[0].length - 2));
   const rules_reward = 0.2 * init_state.rules.length
@@ -115,13 +117,17 @@ function getAdditionFitness(map_array) {
   // const addFitness = -1 * (u + p + 0.1 * s);
   const addFitness = -1 * (u + p + 10 * s) + rules_reward * 0 + obj_reward * 0;
   if (p === 0) {
-    run_keke(decode_map, 10000);
+    let result = run_keke(decode_map, 10000);
+    if (result.w){
+      chromosome._solution = result.s;
+      chromosome._rule_objs_end = result.end_rule_objs;
+    }
   }
   // const addFitness = -10 * (u + 10 * p + 0.1 * s);
   return addFitness;
 }
 
-function check_win(state) {
+function check_solvable(state) {
   const has_players = state.players.length > 0;
   const has_win_word = state.words.some(word => word.name === 'win')
 

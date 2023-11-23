@@ -28,7 +28,7 @@ function run_keke(decode_map, iterations){
 	//setup solver
 	initAgent(gp);
 
-	console.log("Solving...");
+	// console.log("Solving...");
 
 	const start = Date.now();		//start timer
 
@@ -51,12 +51,13 @@ function run_keke(decode_map, iterations){
 			let timeExec = (end-start)/1000;
 
 			//check validity of solution; repeat if invalid
-			if(!validSolution(solution,decode_map)){continue;}
+			let result = validSolution(solution,decode_map);
+			if(!result['win']){continue;}
 
 			//winning solution -> return good solution
 			console.log(`-- SOLUTION FOUND IN ${i} / ${iterations} ITERATIONS | ${timeExec}s --`);
-			console.log({"s":minimizeSolution(solution),"i":i, "t":timeExec,'w':true})
-			return {"s":minimizeSolution(solution),"i":i, "t":timeExec,'w':true};
+			// console.log({"s":minimizeSolution(solution),"i":i, "t":timeExec,'w':true});
+			return {"s":minimizeSolution(solution),"i":i, "t":timeExec,'w':true, 'end_rule_objs':result['end_rule_objs']};
 		}
 	}
 
@@ -98,14 +99,13 @@ function validSolution(sol, init_map){
 
 		//winning solution reached
 		if(didwin){
-			console.log("Winning state rules: " + state.rules);
-			return true;
+			return {win: true, end_rule_objs: state.rule_objs};
 		}
 
 	}
 
 	//no win state reached
-	return false;
+	return {win: false, end_rule_objs: null};
 }
 
 
