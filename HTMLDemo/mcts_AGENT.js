@@ -11,6 +11,7 @@
 // todo: stateSet 对 actionHistory 去重
 // todo: 优化搜索参数及评估权重
 // todo: 自适应搜索深度和迭代次数
+const {map2Str, clearLevel, splitMap, assignMapObjs, interpretRules, nextMove, doubleMap2Str} = require("./simulation");
 let possActions = ["space", "right", "up", "left", "down"];
 
 const MCTS_ITERATIONS = 500;
@@ -93,7 +94,7 @@ function initAgent(init_state) {
     // stateSet = [];
     // stateSet.push(currentNode.mapRep);
     rootMap = init_state['orig_map'];
-    console.log(rootMap)
+    // console.log(rootMap)
 }
 
 // NEXT ITERATION STEP FOR SOLVING
@@ -498,7 +499,9 @@ function mostVisitedAction(node) {
 
     return selected;
 }
-
+exports.initAgent = initAgent;
+exports.iterSolve = iterSolve;
+exports.currentNodes = currentNodes;
 // VISIBLE FUNCTION FOR OTHER JS FILES (NODEJS)
 // module.exports = {
 //

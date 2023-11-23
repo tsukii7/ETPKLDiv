@@ -1,3 +1,5 @@
+const {newState} = require("./simulation");
+const {run_keke} = require("./exec");
 const decode_key = {
   'B': " ",  // empty
   // 'B': ".",  // empty

@@ -1,3 +1,5 @@
+const {getAdditionFitness} = require("./evaluation");
+
 var ETPKLDiv = (function () {
       'use strict';
 
@@ -423,7 +425,7 @@ var ETPKLDiv = (function () {
          *  @access private
          *
          *  @param {Chromosome[]} chromosomes  a list of all the possible maps
-         *  @param {float}        inter_weight the Asymmetric weight defined from Lucas and Volz work. It balances between having the input_sample have at least one of each pattern in the generated image or vice versa.
+         *  @param {number}        inter_weight the Asymmetric weight defined from Lucas and Volz work. It balances between having the input_sample have at least one of each pattern in the generated image or vice versa.
          **/
         _computeDivergenceFintess(chromosomes, inter_weight) {
           for (let c of chromosomes) {

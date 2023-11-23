@@ -129,7 +129,7 @@ class MAPElite {
 
     while (n_evals < this.evaluations) {
       let to_evaluate = [];
-      to_evaluate += this.mutate(etpkldiv._es);
+      to_evaluate = this.mutate(etpkldiv._es);
       n_evals += to_evaluate.length;
       this.evaluate(etpkldiv._es, to_evaluate);
       this.update_archive(to_evaluate);

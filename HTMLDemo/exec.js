@@ -1,4 +1,5 @@
 const {minimizeSolution, game_state, makeLevel, nextMove} = require('./simulation')
+const {initAgent, iterSolve, currentNodes} = require("./mcts_AGENT");
 
 //read in command line arguments
 // const args = process.argv.slice(2)
@@ -164,8 +165,6 @@ function executeLevelSet(ls,iter,agent='default'){
 		//export to JSON if solution found
 		jsonjs.exportReport(agent + "_REPORT.json", ls, lvl.id, iterCt, timeExec,solution,win);
 		report.push({"id":lvl.id, "iterations":iterCt, "time":timeExec, "solution":solution, "won_level":win});
-
-		console.log("");
 	}
 	return report;
 }
@@ -183,7 +182,4 @@ function test(){
 //test();
 
 
-// module.exports = {
-// 	solveLevel: function(levelSet,id,agent){return executeLevel(levelSet,id,MAX_ITER,agent);},
-// 	solveLevelSet: function(levelSet,agent){return executeLevelSet(levelSet,MAX_ITER,agent);}
-// }
+exports.run_keke = run_keke;
