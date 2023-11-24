@@ -1,6 +1,7 @@
 const {addBorder, decodeMap, getAdditionFitness} = require('./evaluation')
 const {newState, isNoun} = require('./simulation')
 const {ETPKLDiv} = require('./ETPKLDiv')
+const fs = require("fs");
 
 // mutation ways
 const mutation_ways = {
@@ -15,7 +16,8 @@ class MAPElite {
               w = 0.5,
               noise = 0,
               mut_times = 1,
-              save_period = 500) {
+              save_period = 500,
+              mutate = mutation_ways['RANDOM']) {
     this.evaluations = evaluations;
     this.random_num = random_num;
     this.mutate_num = mutate_num;
@@ -25,10 +27,10 @@ class MAPElite {
     this.save_period = save_period;
     // archive cell 中的chromosomes按照fitness降序排列
     this.archive = {};
-    this.n_evals = 0;
     this.max_fitness = -Infinity;
     this.mean_fitness = -Infinity;
     this.qd_score = -Infinity;
+    this.mutation_ways = mutate;
   }
 
   solve_map(map) {
@@ -110,6 +112,52 @@ class MAPElite {
     }
   }
 
+  save_archive(path) {
+    const fs = require('fs');
+    const saved_archive = {};
+    for (let key in this.archive) {
+      let saved_json = {};
+      saved_json._binary_start = (parseInt(key) >> 16).toString(2).padStart(9, '0');
+      saved_json._binary_end = (parseInt(key) & 0xFFFF).toString(2).padStart(9, '0');
+      saved_json._fitness = this.archive[key]._fitness;
+      saved_json._solution = this.archive[key]._solution;
+      let rule = "";
+      let rules = [];
+      for (let i = 0; i < this.archive[key]._rule_objs_start.length; i++) {
+        if (i % 3 !== 0) {
+          rule += "-";
+        }
+        rule += this.archive[key]._rule_objs_start[i].name;
+        if ((i + 1) % 3 === 0) {
+          rules.push(rule);
+          rule = "";
+        }
+      }
+      saved_json._rule_objs_start = rules;
+
+      rule = "";
+      rules = [];
+      for (let i = 0; i < this.archive[key]._rule_objs_end.length; i++) {
+        if (i % 3 !== 0) {
+          rule += "-";
+        }
+        rule += this.archive[key]._rule_objs_end[i].name;
+        if ((i + 1) % 3 === 0) {
+          rules.push(rule);
+          rule = "";
+        }
+      }
+      saved_json._rule_objs_end = rules;
+      saved_json._map = addBorder(decodeMap(this.archive[key]._map));
+      saved_archive[key] = saved_json;
+    }
+    fs.writeFile(path, JSON.stringify(saved_archive), function (err) {
+      if (err) {
+        console.error(err);
+      }
+    });
+  }
+
   mutate(es) {
     es._chromosomes.sort(() => Math.random() - 0.5);
 
@@ -122,15 +170,20 @@ class MAPElite {
   }
 
 
-  run() {
+  run(save_path = "./") {
     let etpkldiv = new ETPKLDiv();
     let inputData = [];
+    const fs = require('fs');
+    fs.writeFileSync(save_path, '');
 
     etpkldiv.initializePatternDictionary(this.maps, 3,
       {"x": false, "y": false},
       {"left": false, "right": false, "top": false, "bot": false});
-    etpkldiv.initializeGeneration(10, 10, this.random_num, mutation_ways['RANDOM']);
+    etpkldiv.initializeGeneration(10, 10, this.random_num, this.mutation_ways);
     let n_evals = this.random_num;
+    this.evaluate(etpkldiv._es, etpkldiv._es._chromosomes);
+    this.update_archive(etpkldiv._es._chromosomes);
+    this.log_period(n_evals, etpkldiv, fs, save_path);
 
     while (n_evals < this.evaluations) {
       let to_evaluate = [];
@@ -140,13 +193,24 @@ class MAPElite {
       this.evaluate(etpkldiv._es, to_evaluate);
       this.update_archive(to_evaluate);
       if (n_evals % this.save_period === 0) {
-        let fitList = Object.values(this.archive).map(x => x._fitness);
-        let maxFitness = Math.max(...fitList);
-        let meanFit = fitList.reduce((acc, val) => acc + val, 0) / fitList.length;
-        let qdScore = fitList.reduce((acc, val) => acc + val, 0);
-        console.log(`[${n_evals}/${this.evaluations}] # of Chromosomes: ${etpkldiv._es._chromosomes.length} # of Cell: ${fitList.length} Max Fitness: ${maxFitness} Mean Fitness: ${meanFit} QD Score: ${qdScore}`);
+        this.log_period(n_evals, etpkldiv, fs, save_path);
       }
     }
+  }
+
+  log_period(n_evals, etpkldiv, fs, save_path) {
+    let fitList = Object.values(this.archive).map(x => x._fitness);
+    let maxFitness = Math.max(...fitList);
+    let meanFit = fitList.reduce((acc, val) => acc + val, 0) / fitList.length;
+    let qdScore = fitList.reduce((acc, val) => acc + val, 0);
+    this.max_fitness = maxFitness;
+    this.mean_fitness = meanFit;
+    this.qd_score = qdScore;
+
+    let logMessage = `[${n_evals}/${this.evaluations}]\tCells: ${fitList.length}\tCoverage: ${(fitList.length / (1 << 18) * 100).toFixed(8)}%\tMax Fitness: ${maxFitness.toFixed(8)}\tMean Fitness: ${meanFit.toFixed(8)}\tQD Score: ${qdScore.toFixed(8)}`;
+
+    console.log(logMessage);
+    fs.appendFileSync(save_path, logMessage + '\n');
   }
 }
 
@@ -180,17 +244,61 @@ function loadMapData() {
   });
 }
 
-
 function main() {
-  let elite = new MAPElite(50,50,1000,0.5,0,1,50);
-  loadMapData().then(maps => {
-    elite.maps = maps;
-    elite.run();
-    console.log("Evaluation finished.")
-  }).catch(error => {
-    console.error(error);
-  });
+  for (let i = 0; i < 10; i++) {
+    // ------------------Init parameters------------------
+    let random_num = 500,
+      mutate_num = 500,
+      evaluations = 10_0000,
+      w = 0.5,
+      noise = 0,
+      mut_times = 1,
+      save_period = 500,
+      // mutate = 'RANDOM';
+      mutate = 'ETPKLDiv';
+    // ----------------------------------------------------
 
+
+    // -------------Assign paticular parameters-------------
+    if (i === 0) {
+
+    }else if (i === 1) {
+      random_num = 10_0000;
+      mutate_num = 0;
+    }else if (i === 2) {
+      random_num = 5_0000;
+      mutate_num = 500;
+    }else if (i === 3) {
+      w = 0;
+    }else if (i === 4) {
+      w = 0.25;
+    }else if (i === 5) {
+      w = 0.75;
+    }else if (i === 6) {
+      w = 1.0;
+    }else if (i === 7) {
+      mut_times = 2;
+    }else if (i === 8) {
+      mut_times = 3;
+    }else if (i === 9) {
+      mut_times = 5;
+    }
+    // ----------------------------------------------------
+
+    // let elite = new MAPElite();
+    let elite = new MAPElite(random_num, mutate_num, evaluations, w, noise, mut_times, save_period, mutation_ways[mutate]);
+    let path = `${random_num}_${mutate_num}_${evaluations}_${w}_${noise}_${mut_times}_${mutate}`;
+    loadMapData().then(maps => {
+      elite.maps = maps;
+      elite.run(`./log/${path}.txt`);
+      elite.save_archive(`./archive/${path}.json`);
+      console.log("Evaluation finished.")
+
+    }).catch(error => {
+      console.error(error);
+    });
+
+  }
 }
 
 main();

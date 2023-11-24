@@ -1,0 +1,3 @@
+[500/100000]	Cells: 1	Coverage: 0.00038147%	Max Fitness: -19.48572595	Mean Fitness: -19.48572595	QD Score: -19.48572595
+[1000/100000]	Cells: 4	Coverage: 0.00152588%	Max Fitness: -16.57214110	Mean Fitness: -18.20969403	QD Score: -72.83877610
+[1500/100000]	Cells: 7	Coverage: 0.00267029%	Max Fitness: -16.49606906	Mean Fitness: -18.22096067	QD Score: -127.54672471

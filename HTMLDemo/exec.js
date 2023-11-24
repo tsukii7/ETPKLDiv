@@ -55,7 +55,7 @@ function run_keke(decode_map, iterations){
 			if(!result['win']){continue;}
 
 			//winning solution -> return good solution
-			console.log(`-- SOLUTION FOUND IN ${i} / ${iterations} ITERATIONS | ${timeExec}s --`);
+			// console.log(`-- SOLUTION FOUND IN ${i} / ${iterations} ITERATIONS | ${timeExec}s --`);
 			// console.log({"s":minimizeSolution(solution),"i":i, "t":timeExec,'w':true});
 			return {"s":minimizeSolution(solution),"i":i, "t":timeExec,'w':true, 'end_rule_objs':result['end_rule_objs']};
 		}
@@ -67,7 +67,7 @@ function run_keke(decode_map, iterations){
 
 	let REASON = (i == iterations ? `MAXED ITERATIONS (${iterations})` : `TIMED OUT (${TIMEOUT})s`)
 
-	console.log(`-- NO SOLUTION FOUND: ${REASON}--`);
+	// console.log(`-- NO SOLUTION FOUND: ${REASON}--`);
 	let closest_sol = (solution.length > 0 ? solution : currentNodes[0].actionHistory);
 	return {"s":minimizeSolution(closest_sol),"i":i, "t":timeExec,'w':false};
 	

@@ -48,3 +48,4 @@ UnityDemo/*.csproj
 *.pidb.meta
 *.pdb.meta
 *.mdb.meta
+HTMLDemo/outputs
