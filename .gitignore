@@ -49,3 +49,4 @@ UnityDemo/*.csproj
 *.pdb.meta
 *.mdb.meta
 HTMLDemo/outputs
+HTMLDemo/.idea
