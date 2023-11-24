@@ -207,7 +207,7 @@ class MAPElite {
     this.mean_fitness = meanFit;
     this.qd_score = qdScore;
 
-    let logMessage = `[${n_evals}/${this.evaluations}]\tCells: ${fitList.length}\tCoverage: ${(fitList.length / (1 << 18) * 100).toFixed(8)}%\tMax Fitness: ${maxFitness.toFixed(8)}\tMean Fitness: ${meanFit.toFixed(8)}\tQD Score: ${qdScore.toFixed(8)}`;
+    let logMessage = `[${n_evals.toString().padStart(6, '0')}/${this.evaluations}]\tCells: ${fitList.length}  Coverage: ${(fitList.length / (1 << 18) * 100).toFixed(8)}%\t\tMax Fitness: ${maxFitness.toFixed(8)}\tMean Fitness: ${meanFit.toFixed(8)}\tQD Score: ${qdScore.toFixed(8)}`;
 
     console.log(logMessage);
     fs.appendFileSync(save_path, logMessage + '\n');
