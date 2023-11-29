@@ -111,11 +111,13 @@ function getAdditionFitness(chromosome) {
   const p = check_solvable(init_state);
   let spaceCount = init_state.orig_map.reduce((count, row) => count + row.filter(cell => cell === " ").length, 0);
   const s = spaceCount / ((init_state.orig_map.length - 2) * (init_state.orig_map[0].length - 2));
+  
+  // for future use
   const rules_reward = 0.2 * init_state.rules.length
   const obj_reward = 0.1 * objTotal
 
   // const addFitness = -1 * (u + p + 0.1 * s);
-  const addFitness = -1 * (u + p + 10 * s) + rules_reward * 0 + obj_reward * 0;
+  const addFitness = u + p + 10 * s
   if (p === 0) {
     let result = run_keke(decode_map, 10000);
     if (result.w){

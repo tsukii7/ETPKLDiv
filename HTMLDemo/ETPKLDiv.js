@@ -119,9 +119,9 @@ var ETPKLDiv = (function () {
         }
 
         _calculateKLDivergence(p, qArray, w) {
-          let minFitness = -Infinity,
-            minFirst = -Infinity,
-            minSecond = -Infinity;
+          let minFitness = Infinity,
+            minFirst = Infinity,
+            minSecond = Infinity;
           for (let i = 0; i < qArray.length; i++) {
             let q = qArray[i];
 
@@ -150,8 +150,9 @@ var ETPKLDiv = (function () {
               this._first += p_dash * Math.log(p_dash / q_dash);
               this._second += q_dash * Math.log(q_dash / p_dash);
             }
-            let fitness = -(w * this._first + (1 - w) * this._second);
-            if (fitness > minFitness) {
+            // 原本的 w * D(P||Q) + (1 - w) * D(Q||P)
+            let fitness = w * this._first + (1 - w) * this._second
+            if (fitness < minFitness) {
               minFitness = fitness;
               minFirst = this._first;
               minSecond = this._second;
@@ -164,7 +165,8 @@ var ETPKLDiv = (function () {
 
         calculateDivergence(tp_size, inter_weight = 0.5) {
           if (this._first != null && this._second != null) {
-            this._fitness = -(inter_weight * this._first + (1 - inter_weight) * this._second);
+            // this._fitness = -(inter_weight * this._first + (1 - inter_weight) * this._second);
+            this._fitness = inter_weight * this._first + (1 - inter_weight) * this._second
             return;
           }
           const [probs, patterns, border_patterns] = calculateTilePatternProbabilities([this._map], [tp_size]);
@@ -175,6 +177,8 @@ var ETPKLDiv = (function () {
         calculateNewFitness() {
           let t = getAdditionFitness(this)
           this._fitness += t;
+          // 这是用来映射的函数
+          this._fitness = 1.0 / (1 + this._fitness)
         }
 
         getFitness() {
@@ -428,8 +432,15 @@ var ETPKLDiv = (function () {
          *  @param {number}        inter_weight the Asymmetric weight defined from Lucas and Volz work. It balances between having the input_sample have at least one of each pattern in the generated image or vice versa.
          **/
         _computeDivergenceFintess(chromosomes, inter_weight) {
+          // calculateDivergence 计算的是原论文中的 F(P, Q) = -[w * D(P||Q) + (1 - w) * D(Q||P)]
+          // 其中 [w * D(P||Q) + (1 - w) * D(Q||P)] 取值范围 [0, +∞)，越小越好
+          // Keke 论文加上的项为 u + p + 0.1*s，均为正数，越小越好
+          // 将 [w * D(P||Q) + (1 - w) * D(Q||P)] 和 u + p + 0.1*s 相加，正数，越小越好
+          // 使用以下函数映射后取值范围(0,1)，越大越好，可用于MAP-Elite
           for (let c of chromosomes) {
+            // 这里删除了 F 的负号
             c.calculateDivergence(this._tp_size, inter_weight);
+            // 这里加上了新的项，并映射 1 / (1+F)
             c.calculateNewFitness();
           }
         }
