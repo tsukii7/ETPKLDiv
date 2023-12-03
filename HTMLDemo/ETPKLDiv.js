@@ -495,7 +495,10 @@ var ETPKLDiv = (function () {
           this._iteration = 0;
 
           this._chromosomes = [];
-          const {mutation_ways} = require('./MAP-Elite')
+          const mutation_ways = {
+            'ETPKLDiv': 0,
+            'RANDOM': 1,
+          }
           for (let i = 0; i < pop_size; i++) {
             this._chromosomes.push(new Chromosome(this._tpdict, this._random, width, height));
             switch (flag) {

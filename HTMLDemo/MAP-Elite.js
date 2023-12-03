@@ -152,6 +152,10 @@ class MAPElite {
       saved_archive[key] = saved_json;
     }
     fs.writeFile(path, JSON.stringify(saved_archive), function (err) {
+      if (JSON.stringify(saved_archive).length < 10) {
+        console.error("Archive is empty.");
+        console.error(JSON.stringify(saved_archive));
+      }
       if (err) {
         console.error(err);
       }
@@ -202,12 +206,13 @@ class MAPElite {
     let fitList = Object.values(this.archive).map(x => x._fitness);
     let maxFitness = Math.max(...fitList);
     let meanFit = fitList.reduce((acc, val) => acc + val, 0) / fitList.length;
+    let minFit = Math.min(...fitList);
     let qdScore = fitList.reduce((acc, val) => acc + val, 0);
     this.max_fitness = maxFitness;
     this.mean_fitness = meanFit;
     this.qd_score = qdScore;
 
-    let logMessage = `[${n_evals.toString().padStart(6, '0')}/${this.evaluations}]\tCells: ${fitList.length}  Coverage: ${(fitList.length / (1 << 18) * 100).toFixed(8)}%\t\tMax Fitness: ${maxFitness.toFixed(8)}\tMean Fitness: ${meanFit.toFixed(8)}\tQD Score: ${qdScore.toFixed(8)}`;
+    let logMessage = `[${n_evals.toString().padStart(6, '0')}/${this.evaluations}]\tCells: ${fitList.length}  Coverage: ${(fitList.length / (1 << 18) * 100).toFixed(8)}%\t\tMax Fitness: ${maxFitness.toFixed(8)}\tMean Fitness: ${meanFit.toFixed(8)}\tMin Fitness: ${minFit.toFixed(8)}\tQD Score: ${qdScore.toFixed(8)}`;
 
     console.log(logMessage);
     fs.appendFileSync(save_path, logMessage + '\n');
@@ -245,7 +250,8 @@ function loadMapData() {
 }
 
 function main() {
-  for (let i = 0; i < 10; i++) {
+  const index = 1
+  for (let i = index; i === index; i++) {
     // ------------------Init parameters------------------
     let random_num = 500,
       mutate_num = 500,
@@ -254,8 +260,8 @@ function main() {
       noise = 0,
       mut_times = 1,
       save_period = 500,
-      // mutate = 'RANDOM';
-      mutate = 'ETPKLDiv';
+      mutate = 'RANDOM';
+      // mutate = 'ETPKLDiv';
     // ----------------------------------------------------
 
 
