@@ -14,7 +14,6 @@ class MAPElite {
               mutate_num = 500,
               evaluations = 10000,
               w = 0.5,
-              noise = 0,
               mut_times = 1,
               save_period = 500,
               mutate = mutation_ways['RANDOM']) {
@@ -22,7 +21,6 @@ class MAPElite {
     this.random_num = random_num;
     this.mutate_num = mutate_num;
     this.w = w;
-    this.noise = noise;
     this.mut_times = mut_times;
     this.save_period = save_period;
     // archive cell 中的chromosomes按照fitness降序排列
@@ -250,14 +248,13 @@ function loadMapData() {
 }
 
 function main() {
-  const index = 1
+  const index = 0
   for (let i = index; i === index; i++) {
     // ------------------Init parameters------------------
     let random_num = 500,
       mutate_num = 500,
       evaluations = 10_0000,
       w = 0.5,
-      noise = 0,
       mut_times = 1,
       save_period = 500,
       mutate = 'RANDOM';
@@ -292,8 +289,8 @@ function main() {
     // ----------------------------------------------------
 
     // let elite = new MAPElite();
-    let elite = new MAPElite(random_num, mutate_num, evaluations, w, noise, mut_times, save_period, mutation_ways[mutate]);
-    let path = `${random_num}_${mutate_num}_${evaluations}_${w}_${noise}_${mut_times}_${mutate}`;
+    let elite = new MAPElite(random_num, mutate_num, evaluations, w, mut_times, save_period, mutation_ways[mutate]);
+    let path = `${random_num}_${mutate_num}_${evaluations}_${w}_${mut_times}_${mutate}`;
     loadMapData().then(maps => {
       elite.maps = maps;
       elite.run(`./log/${path}.txt`);
