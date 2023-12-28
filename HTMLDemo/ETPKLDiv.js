@@ -260,6 +260,35 @@ var ETPKLDiv = (function () {
           return child
         }
 
+        /**
+         * 二维单点交叉：
+         * 在二维地图随机选一个点，左上+右下用 parent_1，右上+左下用 parent_2
+         *
+         * @param {Chromosome} parent_1
+         * @param {Chromosome} parent_2
+         * @returns {Chromosome} child 新产生的子代
+         */
+        static crossover_2(parent_1, parent_2) {
+          let child = parent_1.clone()
+          child._first = null
+          child._second = null
+          child.fitness = null
+          const w = parent_1._width
+          const h = parent_1._height
+          const x = Random.nextInt(w)
+          const y = Random.nextInt(h)
+          for (let j = 0; j < h; i++) {
+            for (let i = 0; i < w; j++) {
+              // child is cloned from parent_1, so only consider parent_2 map here
+              if (i > x && j <= y || i <= x && j > y) {
+                child._map[j][i] = parent_2._map[j][i]
+                child._locked[j][i] = parent_2._locked[j][i]
+              }
+            }
+          }
+          return child
+        }
+
         lockTile(x, y, value) {
           this._locked[y][x] = true;
           this._map[y][x] = value;
@@ -569,8 +598,8 @@ var ETPKLDiv = (function () {
           for (let j = 0; j < this._chromosomes.length; j++) {
             const parent_1 = this._rankSelection(this._chromosomes)
             const parent_2 = this._rankSelection(this._chromosomes)
-            const child = Chromosome.crossover_1(parent_1, parent_2)
-            child.mutate(this._tp_size, mut_times, this._borders)
+            let child = Chromosome.crossover_1(parent_1, parent_2)
+            child = child.mutate(this._tp_size, mut_times, this._borders)
             new_chromosomes.push(child);
           }
           this._computeDivergenceFintess(new_chromosomes, inter_weight);
