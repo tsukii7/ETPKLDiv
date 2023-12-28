@@ -253,7 +253,7 @@ function main() {
     // ------------------Init parameters------------------
     let initialize_num = 500,
       mutate_num = 500,
-      evaluations = 10_0000,
+      evaluations = 1_0000,
       w = 0.5,
       mut_times = 1,
       save_period = 500,
@@ -291,7 +291,7 @@ function main() {
     // let elite = new MAPElite();
     let elite = new MAPElite(initialize_num, mutate_num, evaluations, w, mut_times, save_period, initialize_ways[initialize_way]);
     // let path = `${initialize_num}_${mutate_num}_${evaluations}_${w}_${mut_times}_${initialize_way}`;
-    let path = `crossover_1d_1point`;
+    let path = `crossover_1_point_standard`;
     loadMapData().then(maps => {
       elite.maps = maps;
       elite.run(`./log/${path}.txt`);

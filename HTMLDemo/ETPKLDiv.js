@@ -2,35 +2,46 @@ const {getAdditionFitness} = require("./evaluation");
 
 var ETPKLDiv = (function () {
       'use strict';
-
+      
       class Random {
         constructor(seed) {
           //seeding is not working yet
         }
-
+        
         next() {
           return Math.random();
         }
-
-         nextInt(max) {
+        
+        nextInt(max) {
           return Math.floor(Math.random() * max);
         }
-
+        
         nextIntRange(min, max) {
           return Math.floor(Math.random() * (max - min + 1) + min);
         }
+        
+        nextIntNum(max, num) {
+          const arr = []
+          for (let i = 0; i < num; i++) {
+            arr.push(this.nextInt(max))
+            if (arr.indexOf(arr[i]) !== -1) {
+              i--
+            }
+          }
+          return arr
+        }
       }
-
+      
       class Chromosome {
         constructor(tpdict, random, width, height) {
           this._tpdict = tpdict;
           this._random = random;
-
+          
           this._epsilon = 1e-6;
           this._first = null;
           this._second = null;
           this._fitness = null;
-
+          
           this._width = width;
           this._height = height;
           this._map = [];
@@ -43,12 +54,12 @@ var ETPKLDiv = (function () {
               this._locked[i].push(false);
             }
           }
-
+          
           this._solution = ''
           this._rule_objs_start = []
           this._rule_objs_end = []
         }
-
+        
         // ETPKLDiv 自带的，原名 randomInitialize，在每个各自里都随机选 tile，生成结果受样本集频率影响
         randomPatternInitialize(tp_sizes, borders) {
           for (let y = 0; y < this._height; y++) {
@@ -84,7 +95,7 @@ var ETPKLDiv = (function () {
             }
           }
         }
-
+        
         randomBlockInitialize(tp_sizes, borders) {
           for (let i = 0; i < this._height; i++) {
             for (let j = 0; j < this._width; j++) {
@@ -92,7 +103,7 @@ var ETPKLDiv = (function () {
             }
           }
         }
-
+        
         clone() {
           let clone = new Chromosome(this._tpdict, this._random, this._width, this._height);
           for (let i = 0; i < this._map.length; i++) {
@@ -106,7 +117,7 @@ var ETPKLDiv = (function () {
           clone._second = this._second;
           return clone;
         }
-
+        
         // 把 pattern 复制到坐标 (x, y) 处
         _applyTP(pattern, x, y) {
           for (let i = 0; i < pattern.length; i++) {
@@ -117,14 +128,14 @@ var ETPKLDiv = (function () {
             }
           }
         }
-
+        
         _calculateKLDivergence(p, qArray, w) {
           let minFitness = Infinity,
             minFirst = Infinity,
             minSecond = Infinity;
           for (let i = 0; i < qArray.length; i++) {
             let q = qArray[i];
-
+            
             let x = [];
             let total_p = 0;
             for (let key in p) {
@@ -162,7 +173,7 @@ var ETPKLDiv = (function () {
           this._first = minFirst;
           this._second = minSecond;
         }
-
+        
         calculateDivergence(tp_size, inter_weight = 0.5) {
           if (this._first != null && this._second != null) {
             // this._fitness = -(inter_weight * this._first + (1 - inter_weight) * this._second);
@@ -171,24 +182,24 @@ var ETPKLDiv = (function () {
           }
           const [probs, patterns, border_patterns] = calculateTilePatternProbabilities([this._map], [tp_size]);
           this._calculateKLDivergence(probs[tp_size], this._tpdict.getQProbability(tp_size), inter_weight);
-
+          
         }
-
+        
         calculateNewFitness() {
           let t = getAdditionFitness(this)
           this._fitness += t;
           // 这是用来映射的函数
           this._fitness = 1.0 / (1 + this._fitness)
         }
-
+        
         getFitness() {
           return this._fitness;
         }
-
+        
         getMap() {
           return this._map;
         }
-
+        
         mutate(tp_sizes, mut_times, borders) {
           let clone = this.clone();
           let times = Math.max(0, this._random.nextInt(mut_times)) + 1;
@@ -228,30 +239,40 @@ var ETPKLDiv = (function () {
           }
           return clone;
         }
-
+        
         /**
-         * 一维单点交叉：
-         * 把二维地图按行展开成一维，然后随机选取一个位置，该位置之前为 parent_1，之后为 parent_2
+         * n point standard：
+         * 把二维地图按行展开成一维，然后随机选取 n 个位置，第一段用 parent_1，第二段用 parent_2，第三段用 parent_1，以此类推
          *
          * @param {Chromosome} parent_1
          * @param {Chromosome} parent_2
+         * @param {number} n 交叉点个数
          * @returns {Chromosome} child 新产生的子代
          */
-        static crossover_1(parent_1, parent_2) {
+        static crossover_n_point_standard(parent_1, parent_2, n) {
           let child = parent_1.clone()
           child._first = null
           child._second = null
           child.fitness = null
           const w = parent_1._width
           const h = parent_1._height
-          const x = parent_1._random.nextInt(w)
-          const y = parent_1._random.nextInt(h)
-          const bound = x + y * w
-          for (let j = 0; j < h; i++) {
-            for (let i = 0; i < w; j++) {
-              const index = i + j * w
+          const bounds = []
+          for (let i = 0; i < n; i++) {
+            const x = parent_1._random.nextInt(w)
+            const y = parent_1._random.nextInt(h)
+            const bound = x + y * w
+            bounds.push(bound)
+          }
+          bounds.sort()
+          bounds.push(w * h)
+          for (let j = 0; j < h; j++) {
+            for (let i = 0; i < w; i++) {
+              let index = 0
+              while (bounds[index] < i + j * w) {
+                index++
+              }
               // child is cloned from parent_1, so only consider parent_2 map here
-              if (index >= bound) {
+              if (index % 2 === 0) {
                 child._map[j][i] = parent_2._map[j][i]
                 child._locked[j][i] = parent_2._locked[j][i]
               }
@@ -259,16 +280,16 @@ var ETPKLDiv = (function () {
           }
           return child
         }
-
+        
         /**
-         * 二维单点交叉：
-         * 在二维地图随机选一个点，左上+右下用 parent_1，右上+左下用 parent_2
+         * diagonal：
+         * 在二维地图随机选一个点，作右上-左下斜线，将地图分为两块，左上块用 parent_2，右下块用 parent_1
          *
          * @param {Chromosome} parent_1
          * @param {Chromosome} parent_2
          * @returns {Chromosome} child 新产生的子代
          */
-        static crossover_2(parent_1, parent_2) {
+        static crossover_diagonal(parent_1, parent_2) {
           let child = parent_1.clone()
           child._first = null
           child._second = null
@@ -277,10 +298,11 @@ var ETPKLDiv = (function () {
           const h = parent_1._height
           const x = Random.nextInt(w)
           const y = Random.nextInt(h)
-          for (let j = 0; j < h; i++) {
-            for (let i = 0; i < w; j++) {
+          const bound = x + y
+          for (let j = 0; j < h; j++) {
+            for (let i = 0; i < w; i++) {
               // child is cloned from parent_1, so only consider parent_2 map here
-              if (i > x && j <= y || i <= x && j > y) {
+              if (i + j <= bound) {
                 child._map[j][i] = parent_2._map[j][i]
                 child._locked[j][i] = parent_2._locked[j][i]
               }
@@ -288,16 +310,147 @@ var ETPKLDiv = (function () {
           }
           return child
         }
-
+        
+        /**
+         * n block random：
+         * 在二维地图随机选n个点，分别做水平竖直线，将地图分为(n+1)^2块。每一块随机选用 parent_1 或 parent_2
+         *
+         * @param {Chromosome} parent_1
+         * @param {Chromosome} parent_2
+         * @param {number} n 交叉点个数
+         * @returns {Chromosome} child 新产生的子代
+         */
+        static crossover_n_block_random(parent_1, parent_2, n) {
+          let child = parent_1.clone()
+          child._first = null
+          child._second = null
+          child.fitness = null
+          const w = parent_1._width
+          const h = parent_1._height
+          const w_bounds = parent_1._random.nextIntNum(w, n)
+          const h_bounds = parent_1._random.nextIntNum(h, n)
+          w_bounds.sort()
+          h_bounds.sort()
+          const chosen = []
+          for (let i = 0; i <= n; i++) {
+            const temp = []
+            for (let j = 0; j <= n; j++) {
+              if (parent_1._random.next() < 0.5) {
+                temp.push(1)
+              } else {
+                temp.push(2)
+              }
+            }
+            chosen.push(temp)
+          }
+          for (let j = 0; j < h; j++) {
+            for (let i = 0; i < w; i++) {
+              let w_index = 0
+              while (w_bounds[w_index] < i && w_index <= n) {
+                w_index++
+              }
+              let h_index = 0
+              while (h_bounds[h_index] < j && h_index <= n) {
+                h_index++
+              }
+              // child is cloned from parent_1, so only consider parent_2 map here
+              if (chosen[h_index][w_index] === 2) {
+                child._map[j][i] = parent_2._map[j][i]
+                child._locked[j][i] = parent_2._locked[j][i]
+              }
+            }
+          }
+        }
+        
+        /**
+         * n block standard：
+         * 在二维地图随机选n个点，分别做水平竖直线，将地图分为(n+1)^2块。第一块用 parent_1，第二块用 parent_2，第三块用 parent_1，以此类推
+         *
+         * @param {Chromosome} parent_1
+         * @param {Chromosome} parent_2
+         * @param {number} n 交叉点个数
+         * @returns {Chromosome} child 新产生的子代
+         */
+        static crossover_1_block_standard(parent_1, parent_2, n) {
+          let child = parent_1.clone()
+          child._first = null
+          child._second = null
+          child.fitness = null
+          const w = parent_1._width
+          const h = parent_1._height
+          const w_bounds = parent_1._random.nextIntNum(w, n)
+          const h_bounds = parent_1._random.nextIntNum(h, n)
+          w_bounds.sort()
+          h_bounds.sort()
+          const chosen = []
+          for (let i = 0; i <= n; i++) {
+            const temp = []
+            for (let j = 0; j <= n; j++) {
+              if ((i + j) % 2 === 0) {
+                temp.push(1)
+              } else {
+                temp.push(2)
+              }
+            }
+            chosen.push(temp)
+          }
+          for (let j = 0; j < h; j++) {
+            for (let i = 0; i < w; i++) {
+              let w_index = 0
+              while (w_bounds[w_index] < i && w_index <= n) {
+                w_index++
+              }
+              let h_index = 0
+              while (h_bounds[h_index] < j && h_index <= n) {
+                h_index++
+              }
+              // child is cloned from parent_1, so only consider parent_2 map here
+              if (chosen[h_index][w_index] === 2) {
+                child._map[j][i] = parent_2._map[j][i]
+                child._locked[j][i] = parent_2._locked[j][i]
+              }
+            }
+          }
+          return child
+        }
+        
+        /**
+         * uniform：
+         * 对于每个 tile，随机从 parent_1 或 parent_2 中选一个
+         *
+         * @param {Chromosome} parent_1
+         * @param {Chromosome} parent_2
+         * @returns {Chromosome} child 新产生的子代
+         */
+        static crossover_uniform(parent_1, parent_2) {
+          let child = parent_1.clone()
+          child._first = null
+          child._second = null
+          child.fitness = null
+          const w = parent_1._width
+          const h = parent_1._height
+          for (let j = 0; j < h; j++) {
+            for (let i = 0; i < w; i++) {
+              // child is cloned from parent_1, so only consider parent_2 map here
+              if (parent_1._random.next() < 0.5) {
+                child._map[j][i] = parent_2._map[j][i]
+                child._locked[j][i] = parent_2._locked[j][i]
+              }
+            }
+          }
+          return child
+        }
+        
+        
         lockTile(x, y, value) {
           this._locked[y][x] = true;
           this._map[y][x] = value;
         }
-
+        
         unlockTile(x, y) {
           this._locked[y][x] = false;
         }
-
+        
         unlockAll() {
           for (let y = 0; y < this._height; y++) {
             for (let x = 0; x < this._width; x++) {
@@ -306,8 +459,8 @@ var ETPKLDiv = (function () {
           }
         }
       }
-
-
+      
+      
       // ------------> x
       // |
       // |
@@ -334,7 +487,7 @@ var ETPKLDiv = (function () {
         }
         return [key, pattern];
       }
-
+      
       // maps: 需要提取 tile pattern 的 二维地图的列表
       // tp_sizes: tile pattern 的尺寸列表
       // warp: 映射，键为 "x" "y"，值为 true/false，表示是否在该维度上跨越边界
@@ -398,7 +551,7 @@ var ETPKLDiv = (function () {
         }
         return [p, patterns, border_patterns];
       }
-
+      
       class TPDict {
         constructor(input_samples, sizes, warp = null, borders = null) {
           //rotation and flipping need to be added
@@ -423,15 +576,15 @@ var ETPKLDiv = (function () {
           this._patterns = patterns;
           this._border_patterns = border_patterns;
         }
-
+        
         getTPArray(size) {
           return this._patterns[size];
         }
-
+        
         getTPBorderArray(size, loc) {
           return this._border_patterns[size][loc];
         }
-
+        
         getQProbability(size) {
           if (!(this._q_prob[1][1] instanceof Number)) {
             let prob_array = [];
@@ -444,8 +597,8 @@ var ETPKLDiv = (function () {
           }
         }
       }
-
-
+      
+      
       class EvolutionStrategy {
         /**
          *  create the Evolution Strategy object to be used in generation
@@ -455,7 +608,7 @@ var ETPKLDiv = (function () {
           this._tpdict = null;
           this._chromosomes = null;
         }
-
+        
         /**
          *  Get a chromosome probabilistically based on its rank (the last element has the highest rank)
          *
@@ -482,7 +635,7 @@ var ETPKLDiv = (function () {
           }
           return chromosomes[chromosomes.length - 1];
         }
-
+        
         /**
          *  Compute the fitness for all the chromosomes, this was separated in a function for future usage of using parallelism
          *
@@ -504,7 +657,7 @@ var ETPKLDiv = (function () {
             c.calculateNewFitness();
           }
         }
-
+        
         /**
          *  Sort the chromosomes based on their fitness and temperature noise input
          *
@@ -518,7 +671,7 @@ var ETPKLDiv = (function () {
             return c1.getFitness() - c2.getFitness() + noise * (this._random.next() * 2 - 1)
           });
         }
-
+        
         /**
          *  Initialize the pattern dictionary that is used during generation
          *  only call that function when you want to change any aspect of the patterns
@@ -538,7 +691,7 @@ var ETPKLDiv = (function () {
           this._warp = warp;
           this._borders = borders;
         }
-
+        
         /**
          *  Initialize the algorithm with a bunch of randomly generated maps
          *  only call after calling initializePatternDictionary
@@ -551,9 +704,9 @@ var ETPKLDiv = (function () {
           if (this._tpdict == null) {
             throw "you must call initializePatternDictionary first."
           }
-
+          
           this._iteration = 0;
-
+          
           this._chromosomes = [];
           const initialize_ways = {
             'ETPKLDiv': 0,
@@ -571,8 +724,8 @@ var ETPKLDiv = (function () {
             }
           }
         }
-
-
+        
+        
         /**
          *  Advance the algorithm one step you need to call initializeGeneration and initializePatternDictionary first
          *
@@ -587,18 +740,18 @@ var ETPKLDiv = (function () {
           if (this._chromosomes == null) {
             throw "you must call initializeGeneration before calling this function."
           }
-
+          
           if (this._iteration == 0) {
             this._computeDivergenceFintess(this._chromosomes, inter_weight);
             this._sortChromosomes(this._chromosomes, noise);
           }
-
+          
           let new_chromosomes = [];
-
+          
           for (let j = 0; j < this._chromosomes.length; j++) {
             const parent_1 = this._rankSelection(this._chromosomes)
             const parent_2 = this._rankSelection(this._chromosomes)
-            let child = Chromosome.crossover_1(parent_1, parent_2)
+            let child = Chromosome.crossover_n_point_standard(parent_1, parent_2, 1)
             child = child.mutate(this._tp_size, mut_times, this._borders)
             new_chromosomes.push(child);
           }
@@ -608,7 +761,7 @@ var ETPKLDiv = (function () {
           this._chromosomes = this._chromosomes.splice(this._chromosomes.length / 2);
           this._iteration += 1;
         }
-
+        
         /**
          *  Get the fitness of the best chromosome in the generation
          */
@@ -616,10 +769,10 @@ var ETPKLDiv = (function () {
           if (this._chromosomes == null) {
             throw "you must call initializeGeneration before calling this function."
           }
-
+          
           return this._chromosomes[this._chromosomes.length - 1].getFitness();
         }
-
+        
         /**
          *  Get the map of the best chromosome in the generation
          */
@@ -627,10 +780,10 @@ var ETPKLDiv = (function () {
           if (this._chromosomes == null) {
             throw "you must call initializeGeneration before calling this function."
           }
-
+          
           return this._chromosomes[this._chromosomes.length - 1].getMap();
         }
-
+        
         /**
          *  Get the current iteration
          */
@@ -638,10 +791,10 @@ var ETPKLDiv = (function () {
           if (this._chromosomes == null) {
             throw "you must call initializeGeneration before calling this function."
           }
-
+          
           return this._iteration;
         }
-
+        
         /**
          *  Lock a certain tile to a certain value so it won't be affected with the Generation process
          *
@@ -653,12 +806,12 @@ var ETPKLDiv = (function () {
           if (this._chromosomes == null) {
             throw "you must call initializeGeneration before calling this function."
           }
-
+          
           for (let c of this._chromosomes) {
             c.lockTile(x, y, value);
           }
         }
-
+        
         /**
          *  Unlock a certain tile in the generated maps
          *
@@ -669,12 +822,12 @@ var ETPKLDiv = (function () {
           if (this._chromosomes == null) {
             throw "you must call initializeGeneration before calling this function."
           }
-
+          
           for (let c of this._chromosomes) {
             c.unlockTile(x, y);
           }
         }
-
+        
         /**
          *  unlock all the locked tiles in the generated maps
          */
@@ -682,13 +835,13 @@ var ETPKLDiv = (function () {
           if (this._chromosomes == null) {
             throw "you must call initializeGeneration before calling this function."
           }
-
+          
           for (let c of this._chromosomes) {
             c.unlockAll();
           }
         }
       }
-
+      
       class ETPKLDiv {
         /**
          *  create the ETPKLDiv object to be used in generation
@@ -696,7 +849,7 @@ var ETPKLDiv = (function () {
         constructor() {
           this._es = new EvolutionStrategy();
         }
-
+        
         /**
          *  Initialize the pattern dictionary that is used during generation
          *  only call that function when you want to change any aspect of the patterns
@@ -721,7 +874,7 @@ var ETPKLDiv = (function () {
           }
           this._es.initializePatternDictionary(input_samples, tp_size, warp, borders);
         }
-
+        
         /**
          *  Initialize the algorithm with a bunch of randomly generated maps
          *  only call after calling initializePatternDictionary
@@ -743,7 +896,7 @@ var ETPKLDiv = (function () {
           }
           this._es.initializeGeneration(width, height, pop_size, flag);
         }
-
+        
         /**
          *  Advance the algorithm one step you need to call initializeGeneration and initializePatternDictionary first
          *
@@ -760,28 +913,28 @@ var ETPKLDiv = (function () {
           }
           this._es.step(inter_weight, mut_times, noise);
         }
-
+        
         /**
          *  Get the fitness of the best chromosome in the generation
          */
         getFitness() {
           return this._es.getFitness();
         }
-
+        
         /**
          *  Get the map of the best chromosome in the generation
          */
         getMap() {
           return this._es.getMap();
         }
-
+        
         /**
          *  Get the current iteration
          */
         getIteration() {
           return this._es.getIteration();
         }
-
+        
         /**
          *  Lock a certain tile to a certain value so it won't be affected with the Generation process
          *
@@ -792,7 +945,7 @@ var ETPKLDiv = (function () {
         lockTile(x, y, value) {
           this._es.lockTile(x, y, value);
         }
-
+        
         /**
          *  Unlock a certain tile in the generated maps
          *
@@ -802,14 +955,14 @@ var ETPKLDiv = (function () {
         unlockTile(x, y) {
           this._es.unlockTile(x, y);
         }
-
+        
         /**
          *  unlock all the locked tiles in the generated maps
          */
         unlockAll() {
           this._es.unlockAll();
         }
-
+        
         /**
          *  Run the algorithm for a fixed amount of iterations.
          *  This function doesn't need anything to be called before hand.
@@ -836,9 +989,9 @@ var ETPKLDiv = (function () {
           return this.getMap();
         }
       }
-
+      
       return ETPKLDiv;
-
+      
     }
     ()
   )
