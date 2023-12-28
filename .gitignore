@@ -50,3 +50,5 @@ UnityDemo/*.csproj
 *.mdb.meta
 HTMLDemo/outputs
 HTMLDemo/.idea
+*.json
+*.txt
