@@ -290,7 +290,8 @@ function main() {
 
     // let elite = new MAPElite();
     let elite = new MAPElite(initialize_num, mutate_num, evaluations, w, mut_times, save_period, initialize_ways[initialize_way]);
-    let path = `${initialize_num}_${mutate_num}_${evaluations}_${w}_${mut_times}_${initialize_way}`;
+    // let path = `${initialize_num}_${mutate_num}_${evaluations}_${w}_${mut_times}_${initialize_way}`;
+    let path = `crossover_1d_1point`;
     loadMapData().then(maps => {
       elite.maps = maps;
       elite.run(`./log/${path}.txt`);

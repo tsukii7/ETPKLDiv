@@ -12,7 +12,7 @@ var ETPKLDiv = (function () {
           return Math.random();
         }
 
-        static nextInt(max) {
+         nextInt(max) {
           return Math.floor(Math.random() * max);
         }
 
@@ -244,8 +244,8 @@ var ETPKLDiv = (function () {
           child.fitness = null
           const w = parent_1._width
           const h = parent_1._height
-          const x = Random.nextInt(w)
-          const y = Random.nextInt(h)
+          const x = parent_1._random.nextInt(w)
+          const y = parent_1._random.nextInt(h)
           const bound = x + y * w
           for (let j = 0; j < h; i++) {
             for (let i = 0; i < w; j++) {
