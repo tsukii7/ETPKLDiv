@@ -12,7 +12,7 @@ var ETPKLDiv = (function () {
           return Math.random();
         }
 
-        nextInt(max) {
+        static nextInt(max) {
           return Math.floor(Math.random() * max);
         }
 
@@ -227,6 +227,37 @@ var ETPKLDiv = (function () {
             }
           }
           return clone;
+        }
+
+        /**
+         * 一维单点交叉：
+         * 把二维地图按行展开成一维，然后随机选取一个位置，该位置之前为 parent_1，之后为 parent_2
+         *
+         * @param {Chromosome} parent_1
+         * @param {Chromosome} parent_2
+         * @returns {Chromosome} child 新产生的子代
+         */
+        static crossover_1(parent_1, parent_2) {
+          let child = parent_1.clone()
+          child._first = null
+          child._second = null
+          child.fitness = null
+          const w = parent_1._width
+          const h = parent_1._height
+          const x = Random.nextInt(w)
+          const y = Random.nextInt(h)
+          const bound = x + y * w
+          for (let j = 0; j < h; i++) {
+            for (let i = 0; i < w; j++) {
+              const index = i + j * w
+              // child is cloned from parent_1, so only consider parent_2 map here
+              if (index >= bound) {
+                child._map[j][i] = parent_2._map[j][i]
+                child._locked[j][i] = parent_2._locked[j][i]
+              }
+            }
+          }
+          return child
         }
 
         lockTile(x, y, value) {
@@ -495,17 +526,17 @@ var ETPKLDiv = (function () {
           this._iteration = 0;
 
           this._chromosomes = [];
-          const mutation_ways = {
+          const initialize_ways = {
             'ETPKLDiv': 0,
             'RANDOM': 1,
           }
           for (let i = 0; i < pop_size; i++) {
             this._chromosomes.push(new Chromosome(this._tpdict, this._random, width, height));
             switch (flag) {
-              case mutation_ways['ETPKLDiv']:
+              case initialize_ways['ETPKLDiv']:
                 this._chromosomes[i].randomPatternInitialize(1, this._borders);
                 break;
-              case mutation_ways['RANDOM']:
+              case initialize_ways['RANDOM']:
                 this._chromosomes[i].randomBlockInitialize();
                 break
             }
@@ -536,8 +567,11 @@ var ETPKLDiv = (function () {
           let new_chromosomes = [];
 
           for (let j = 0; j < this._chromosomes.length; j++) {
-            let c = this._rankSelection(this._chromosomes).mutate(this._tp_size, mut_times, this._borders);
-            new_chromosomes.push(c);
+            const parent_1 = this._rankSelection(this._chromosomes)
+            const parent_2 = this._rankSelection(this._chromosomes)
+            const child = Chromosome.crossover_1(parent_1, parent_2)
+            child.mutate(this._tp_size, mut_times, this._borders)
+            new_chromosomes.push(child);
           }
           this._computeDivergenceFintess(new_chromosomes, inter_weight);
           this._chromosomes = this._chromosomes.concat(new_chromosomes);
@@ -668,7 +702,7 @@ var ETPKLDiv = (function () {
          *  @param {int}   [pop_size=1]       the number of generated map at once (having more maps in parallel) helps find good solution faster
          * @param flag
          **/
-        initializeGeneration(width, height, pop_size = 1, flag = mutation_ways['ETPKLDiv']) {
+        initializeGeneration(width, height, pop_size = 1, flag) {
           if (width < this._es._tp_size) {
             throw "width has to be bigger than or equal to tp_size"
           }

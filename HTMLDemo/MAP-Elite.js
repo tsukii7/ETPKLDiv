@@ -4,21 +4,21 @@ const {ETPKLDiv} = require('./ETPKLDiv')
 const fs = require("fs");
 
 // mutation ways
-const mutation_ways = {
+const initialize_ways = {
   'ETPKLDiv': 0,
   'RANDOM': 1,
 }
 
 class MAPElite {
-  constructor(random_num = 500,
+  constructor(initialize_num = 500,
               mutate_num = 500,
               evaluations = 10000,
               w = 0.5,
               mut_times = 1,
               save_period = 500,
-              mutate = mutation_ways['RANDOM']) {
+              initialize_way = initialize_ways['RANDOM']) {
     this.evaluations = evaluations;
-    this.random_num = random_num;
+    this.initialize_num = initialize_num;
     this.mutate_num = mutate_num;
     this.w = w;
     this.mut_times = mut_times;
@@ -28,7 +28,7 @@ class MAPElite {
     this.max_fitness = -Infinity;
     this.mean_fitness = -Infinity;
     this.qd_score = -Infinity;
-    this.mutation_ways = mutate;
+    this.initialize_way = initialize_way;
   }
 
   solve_map(map) {
@@ -181,8 +181,8 @@ class MAPElite {
     etpkldiv.initializePatternDictionary(this.maps, 3,
       {"x": false, "y": false},
       {"left": false, "right": false, "top": false, "bot": false});
-    etpkldiv.initializeGeneration(10, 10, this.random_num, this.mutation_ways);
-    let n_evals = this.random_num;
+    etpkldiv.initializeGeneration(10, 10, this.initialize_num, this.initialize_way);
+    let n_evals = this.initialize_num;
     this.evaluate(etpkldiv._es, etpkldiv._es._chromosomes);
     this.update_archive(etpkldiv._es._chromosomes);
     this.log_period(n_evals, etpkldiv, fs, save_path);
@@ -251,14 +251,14 @@ function main() {
   const index = 0
   for (let i = index; i === index; i++) {
     // ------------------Init parameters------------------
-    let random_num = 500,
+    let initialize_num = 500,
       mutate_num = 500,
       evaluations = 10_0000,
       w = 0.5,
       mut_times = 1,
       save_period = 500,
-      mutate = 'RANDOM';
-      // mutate = 'ETPKLDiv';
+      // initialize_way = 'RANDOM';
+      initialize_way = 'ETPKLDiv';
     // ----------------------------------------------------
 
 
@@ -266,10 +266,10 @@ function main() {
     if (i === 0) {
 
     }else if (i === 1) {
-      random_num = 10_0000;
+      initialize_num = 10_0000;
       mutate_num = 0;
     }else if (i === 2) {
-      random_num = 5_0000;
+      initialize_num = 5_0000;
       mutate_num = 500;
     }else if (i === 3) {
       w = 0;
@@ -289,8 +289,8 @@ function main() {
     // ----------------------------------------------------
 
     // let elite = new MAPElite();
-    let elite = new MAPElite(random_num, mutate_num, evaluations, w, mut_times, save_period, mutation_ways[mutate]);
-    let path = `${random_num}_${mutate_num}_${evaluations}_${w}_${mut_times}_${mutate}`;
+    let elite = new MAPElite(initialize_num, mutate_num, evaluations, w, mut_times, save_period, initialize_ways[initialize_way]);
+    let path = `${initialize_num}_${mutate_num}_${evaluations}_${w}_${mut_times}_${initialize_way}`;
     loadMapData().then(maps => {
       elite.maps = maps;
       elite.run(`./log/${path}.txt`);
@@ -306,4 +306,4 @@ function main() {
 
 main();
 
-exports.mutation_ways = mutation_ways;
+exports.mutation_ways = initialize_ways;
