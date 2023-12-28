@@ -51,3 +51,4 @@ UnityDemo/*.csproj
 HTMLDemo/outputs
 HTMLDemo/.idea
 *.json
+*.txt
