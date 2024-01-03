@@ -371,7 +371,7 @@ var ETPKLDiv = (function () {
          * @param {number} n 交叉点个数
          * @returns {Chromosome} child 新产生的子代
          */
-        static crossover_1_block_standard(parent_1, parent_2, n) {
+        static crossover_n_block_standard(parent_1, parent_2, n) {
           let child = parent_1.clone()
           child._first = null
           child._second = null
