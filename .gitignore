@@ -48,7 +48,8 @@ UnityDemo/*.csproj
 *.pidb.meta
 *.pdb.meta
 *.mdb.meta
-HTMLDemo/outputs
-HTMLDemo/.idea
+
+
 *.json
-*.txt
+!/HTMLDemo/.idea/
+.idea

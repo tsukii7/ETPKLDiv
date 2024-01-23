@@ -1,0 +1,1 @@
+[100000/100000]	Cells: 368  Coverage: 0.14038086%		Max Fitness: 0.06749703	Mean Fitness: 0.06635184	Min Fitness: 0.06391738	QD Score: 24.41747725
